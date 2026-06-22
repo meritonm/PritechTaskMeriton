@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Button } from '@/components/ui/Button';
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface ErrorViewProps {
   title?: string;
@@ -13,6 +13,8 @@ interface ErrorViewProps {
 
 export function ErrorView({ title, message, onRetry }: ErrorViewProps) {
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -24,22 +26,23 @@ export function ErrorView({ title, message, onRetry }: ErrorViewProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.subtitle,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  message: {
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.subtitle,
+      color: c.text,
+      textAlign: 'center',
+    },
+    message: {
+      ...typography.body,
+      color: c.textMuted,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+  });

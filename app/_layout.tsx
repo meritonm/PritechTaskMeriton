@@ -5,19 +5,25 @@ import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 
 import { AppProviders } from '@/providers/AppProviders';
-import { colors, typography } from '@/theme';
+import { typography, useTheme } from '@/theme';
 
 export default function RootLayout() {
   return (
     <AppProviders>
-      <StatusBar style="dark" />
+      <ThemedStatusBar />
       <RootStack />
     </AppProviders>
   );
 }
 
+function ThemedStatusBar() {
+  const { scheme } = useTheme();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
+}
+
 function RootStack() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
     <Stack

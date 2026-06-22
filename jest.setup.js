@@ -9,6 +9,17 @@ jest.mock('expo-crypto', () => {
   };
 });
 
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ granted: false })),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ granted: false })),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('id')),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
+  AndroidImportance: { DEFAULT: 3 },
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+}));
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(() => Promise.resolve()),
   notificationAsync: jest.fn(() => Promise.resolve()),

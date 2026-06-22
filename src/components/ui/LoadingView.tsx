@@ -1,12 +1,15 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface LoadingViewProps {
   message?: string;
 }
 
 export function LoadingView({ message = 'Loading...' }: LoadingViewProps) {
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={colors.primary} />
@@ -15,15 +18,16 @@ export function LoadingView({ message = 'Loading...' }: LoadingViewProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  message: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+      gap: spacing.md,
+    },
+    message: {
+      ...typography.body,
+      color: c.textMuted,
+    },
+  });

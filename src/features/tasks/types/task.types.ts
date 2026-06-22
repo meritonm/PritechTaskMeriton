@@ -6,6 +6,15 @@ export type TaskTag = 'work' | 'personal' | 'study';
 
 export type TaskDisplayStatus = 'pending' | 'completed' | 'overdue';
 
+export type TaskHistoryType = 'created' | 'updated' | 'completed' | 'reopened';
+
+export interface TaskHistoryEntry {
+  id: string;
+  type: TaskHistoryType;
+  timestamp: string;
+  fields?: string[];
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -15,6 +24,7 @@ export interface Task {
   dueDate: string | null;
   tags: TaskTag[];
   createdAt: string;
+  history: TaskHistoryEntry[];
 }
 
 export interface DummyJsonTodo {

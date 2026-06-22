@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TASK_PRIORITIES } from '@/features/tasks/schemas/task.schema';
 import { TaskPriority } from '@/features/tasks/types/task.types';
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface PriorityPickerProps {
   value: TaskPriority;
@@ -12,6 +12,8 @@ interface PriorityPickerProps {
 
 export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -42,46 +44,47 @@ export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.label,
-    color: colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  chip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-  },
-  chipSelected: {
-    backgroundColor: colors.primaryLight,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  chipLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '500',
-  },
-  chipLabelSelected: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.label,
+      color: c.text,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    chip: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+    },
+    chipSelected: {
+      backgroundColor: c.primaryLight,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    chipLabel: {
+      ...typography.caption,
+      color: c.textMuted,
+      fontWeight: '500',
+    },
+    chipLabelSelected: {
+      color: c.text,
+      fontWeight: '600',
+    },
+  });

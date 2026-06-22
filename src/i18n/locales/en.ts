@@ -23,6 +23,7 @@ export const en = {
     noMatchDescription: 'Try a different search or filter.',
     importButton: 'Import sample tasks',
     importing: 'Importing...',
+    progress: '{{done}} of {{total}} completed',
   },
   filters: {
     all: 'All',
@@ -71,6 +72,20 @@ export const en = {
     deleteTask: 'Delete Task',
     notFoundTitle: 'Task not found',
     notFoundMessage: 'This task may have been deleted.',
+    historyLabel: 'Activity',
+  },
+  history: {
+    created: 'Task created',
+    updated: 'Edited',
+    completed: 'Marked completed',
+    reopened: 'Reopened',
+  },
+  fields: {
+    title: 'title',
+    description: 'description',
+    priority: 'priority',
+    dueDate: 'due date',
+    tags: 'tags',
   },
   alerts: {
     deleteTitle: 'Delete task',
@@ -93,6 +108,9 @@ export const en = {
     label: 'Language',
     english: 'English',
     albanian: 'Shqip',
+  },
+  notifications: {
+    reminderBody: 'This task is due today.',
   },
 };
 

@@ -29,13 +29,20 @@ A clean, real-world task manager built with **React Native (Expo SDK 56)** and *
 ### Extra polish (beyond the brief)
 
 - **Real-world task behavior** — automatic **Overdue** status, **green** badge for completed, **red** accent/border for high priority.
+- **Dark mode** — light / dark theme with a one-tap toggle, persisted to the device and respecting the system default.
 - **Internationalization (i18n)** — English and Albanian, with automatic device-language detection.
+- **Drag-to-reorder** — long-press a card to reorder tasks (powered by Reanimated); order is persisted.
+- **Completion progress bar** — a live "X of Y completed" indicator at the top of the list.
+- **Task activity history** — a per-task timeline of create / edit / complete / reopen events.
+- **Local reminders** — schedules a notification on a task's due date (see note below).
 - **Swipe-to-delete** gesture on task cards.
 - **Haptic feedback** on key actions (complete, delete, create, import).
 - **Smooth animations** — card entrance, animated list add/remove (LayoutAnimation).
 - **Pull-to-refresh** and **skeleton loading** while importing sample data.
 - **Unit tests** for store logic and utilities (Jest).
 - **ESLint + Prettier** for consistent code quality.
+
+> **Note on reminders:** local notifications are scheduled best-effort. In **Expo Go** (SDK 53+) notification support is limited, so for a reliable demo run a [development build](https://docs.expo.dev/develop/development-builds/introduction/). The app degrades gracefully if notifications are unavailable.
 
 ---
 
@@ -50,6 +57,9 @@ A clean, real-world task manager built with **React Native (Expo SDK 56)** and *
 | Server state       | TanStack Query v5                              |
 | Forms & validation | React Hook Form + Zod                          |
 | i18n               | i18next / react-i18next + expo-localization    |
+| Animations/gestures| Reanimated, gesture-handler, draggable-flatlist |
+| Notifications      | expo-notifications                             |
+| Haptics            | expo-haptics                                   |
 | Dates              | date-fns                                       |
 | Testing            | Jest + jest-expo                               |
 | Tooling            | ESLint (eslint-config-expo) + Prettier         |
@@ -136,6 +146,7 @@ Each task has the following fields:
 | `dueDate`     | `string \| null`                    | ISO date; drives the **Overdue** state |
 | `tags`        | `('work' \| 'personal' \| 'study')[]` | Optional                             |
 | `createdAt`   | `string`                            | ISO timestamp, set automatically       |
+| `history`     | `TaskHistoryEntry[]`                | Activity log (created/edited/etc.)     |
 
 The **display status** is derived: a pending task whose `dueDate` is in the past becomes **Overdue**.
 

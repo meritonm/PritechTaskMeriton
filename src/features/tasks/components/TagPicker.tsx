@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TASK_TAGS } from '@/features/tasks/schemas/task.schema';
 import { TaskTag } from '@/features/tasks/types/task.types';
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface TagPickerProps {
   value: TaskTag[];
@@ -12,6 +12,8 @@ interface TagPickerProps {
 
 export function TagPicker({ value, onChange }: TagPickerProps) {
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
 
   const toggleTag = (tag: TaskTag) => {
     if (value.includes(tag)) {
@@ -34,7 +36,10 @@ export function TagPicker({ value, onChange }: TagPickerProps) {
               onPress={() => toggleTag(tag)}
               style={[
                 styles.chip,
-                selected && { backgroundColor: `${colors.tag[tag]}22`, borderColor: colors.tag[tag] },
+                selected && {
+                  backgroundColor: `${colors.tag[tag]}22`,
+                  borderColor: colors.tag[tag],
+                },
               ]}
             >
               <Text style={[styles.chipLabel, selected && { color: colors.tag[tag] }]}>
@@ -48,31 +53,32 @@ export function TagPicker({ value, onChange }: TagPickerProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.label,
-    color: colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    borderRadius: 999,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  chipLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '500',
-    textTransform: 'capitalize',
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.label,
+      color: c.text,
+    },
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    chip: {
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      borderRadius: 999,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    chipLabel: {
+      ...typography.caption,
+      color: c.textMuted,
+      fontWeight: '500',
+      textTransform: 'capitalize',
+    },
+  });

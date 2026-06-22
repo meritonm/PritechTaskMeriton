@@ -3,21 +3,27 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import i18n, { AppLanguage } from '@/i18n';
+import { ThemePreference } from '@/theme/colors';
 
 interface SettingsStore {
   language: AppLanguage;
+  themePreference: ThemePreference;
   setLanguage: (language: AppLanguage) => void;
+  setThemePreference: (preference: ThemePreference) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       language: (i18n.language as AppLanguage) ?? 'en',
+      themePreference: 'system',
 
       setLanguage: (language) => {
         i18n.changeLanguage(language);
         set({ language });
       },
+
+      setThemePreference: (preference) => set({ themePreference: preference }),
     }),
     {
       name: 'settings-storage',

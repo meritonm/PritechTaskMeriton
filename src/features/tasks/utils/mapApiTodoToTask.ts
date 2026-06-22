@@ -46,5 +46,6 @@ export function mapApiTodoToTask(todo: DummyJsonTodo, index: number): Task {
     dueDate: pickDueDate(index, todo.completed),
     tags: pickTags(index),
     createdAt: new Date().toISOString(),
+    history: [{ id: Crypto.randomUUID(), type: 'created', timestamp: new Date().toISOString() }],
   };
 }

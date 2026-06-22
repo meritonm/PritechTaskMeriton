@@ -25,6 +25,7 @@ export const sq: TranslationResources = {
     noMatchDescription: 'Provo një kërkim ose filtër tjetër.',
     importButton: 'Importo detyra shembull',
     importing: 'Duke importuar...',
+    progress: '{{done}} nga {{total}} të kryera',
   },
   filters: {
     all: 'Të gjitha',
@@ -73,6 +74,20 @@ export const sq: TranslationResources = {
     deleteTask: 'Fshij Detyrën',
     notFoundTitle: 'Detyra nuk u gjet',
     notFoundMessage: 'Kjo detyrë mund të jetë fshirë.',
+    historyLabel: 'Aktiviteti',
+  },
+  history: {
+    created: 'Detyra u krijua',
+    updated: 'U modifikua',
+    completed: 'U shënua si e kryer',
+    reopened: 'U rihap',
+  },
+  fields: {
+    title: 'titulli',
+    description: 'përshkrimi',
+    priority: 'prioriteti',
+    dueDate: 'afati',
+    tags: 'etiketat',
   },
   alerts: {
     deleteTitle: 'Fshij detyrën',
@@ -95,5 +110,8 @@ export const sq: TranslationResources = {
     label: 'Gjuha',
     english: 'English',
     albanian: 'Shqip',
+  },
+  notifications: {
+    reminderBody: 'Kjo detyrë skadon sot.',
   },
 };

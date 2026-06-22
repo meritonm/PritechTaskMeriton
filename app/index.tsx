@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  FlatList,
   LayoutAnimation,
   Platform,
   Pressable,
@@ -13,6 +12,10 @@ import {
   UIManager,
   View,
 } from 'react-native';
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from 'react-native-draggable-flatlist';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
@@ -20,11 +23,14 @@ import { ImportSampleButton } from '@/features/tasks/components/ImportSampleButt
 import { TaskCard } from '@/features/tasks/components/TaskCard';
 import { TaskCardSkeleton } from '@/features/tasks/components/TaskCardSkeleton';
 import { TaskFilters } from '@/features/tasks/components/TaskFilters';
+import { TaskProgress } from '@/features/tasks/components/TaskProgress';
 import { TaskSearchBar } from '@/features/tasks/components/TaskSearchBar';
 import { useImportSampleTasks } from '@/features/tasks/hooks/useImportSampleTasks';
 import { getFilteredTasks, useTaskStore } from '@/features/tasks/store/taskStore';
+import { Task } from '@/features/tasks/types/task.types';
 import { LanguageSwitcher } from '@/features/settings/components/LanguageSwitcher';
-import { colors, radius, shadows, spacing, typography } from '@/theme';
+import { ThemeSwitcher } from '@/features/settings/components/ThemeSwitcher';
+import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -35,11 +41,15 @@ const SKELETON_KEYS = ['s1', 's2', 's3', 's4'];
 export default function TaskListScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const tasks = useTaskStore((state) => state.tasks);
   const searchQuery = useTaskStore((state) => state.searchQuery);
   const statusFilter = useTaskStore((state) => state.statusFilter);
+  const setTasks = useTaskStore((state) => state.setTasks);
   const filteredTasks = getFilteredTasks({ tasks, searchQuery, statusFilter });
   const { runImport, isImporting } = useImportSampleTasks();
+  const canReorder = statusFilter === 'all' && searchQuery.trim() === '';
 
   const mountedRef = useRef(false);
   useEffect(() => {
@@ -54,6 +64,12 @@ export default function TaskListScreen() {
   const hasFilteredTasks = filteredTasks.length > 0;
   const showSkeleton = isImporting && !hasTasks;
 
+  const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<Task>) => (
+    <ScaleDecorator>
+      <TaskCard task={item} onDrag={canReorder ? drag : undefined} dragging={isActive} />
+    </ScaleDecorator>
+  );
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -64,7 +80,10 @@ export default function TaskListScreen() {
             </View>
             <Text style={styles.title}>{t('list.title')}</Text>
           </View>
-          <LanguageSwitcher />
+          <View style={styles.headerActions}>
+            <ThemeSwitcher />
+            <LanguageSwitcher />
+          </View>
         </View>
         <View style={styles.headerBottom}>
           <Text style={styles.subtitle}>{t('list.subtitle', { count: tasks.length })}</Text>
@@ -74,6 +93,7 @@ export default function TaskListScreen() {
 
       {hasTasks ? (
         <>
+          <TaskProgress />
           <TaskSearchBar />
           <TaskFilters />
         </>
@@ -102,10 +122,12 @@ export default function TaskListScreen() {
           <EmptyState title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
         </View>
       ) : (
-        <FlatList
+        <DraggableFlatList
           data={filteredTasks}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TaskCard task={item} />}
+          renderItem={renderDraggableItem}
+          onDragEnd={({ data }) => setTasks(data)}
+          activationDistance={canReorder ? 12 : 10000}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -130,77 +152,83 @@ export default function TaskListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
-    gap: spacing.xs,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flex: 1,
-  },
-  logo: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-  },
-  headerBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  list: {
-    gap: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: 96,
-  },
-  skeletonList: {
-    gap: spacing.md,
-    paddingTop: spacing.xs,
-  },
-  emptyWrap: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  importWrap: {
-    paddingHorizontal: spacing.xl,
-    marginTop: spacing.md,
-  },
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.xl,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.lg,
-  },
-  fabPressed: {
-    backgroundColor: colors.primaryDark,
-    transform: [{ scale: 0.96 }],
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    header: {
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.lg,
+      gap: spacing.xs,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    brand: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    logo: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.md,
+      backgroundColor: c.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.sm,
+    },
+    title: {
+      ...typography.title,
+      color: c.text,
+    },
+    headerBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: spacing.xs,
+    },
+    subtitle: {
+      ...typography.caption,
+      color: c.textMuted,
+    },
+    list: {
+      gap: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: 96,
+    },
+    skeletonList: {
+      gap: spacing.md,
+      paddingTop: spacing.xs,
+    },
+    emptyWrap: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    importWrap: {
+      paddingHorizontal: spacing.xl,
+      marginTop: spacing.md,
+    },
+    fab: {
+      position: 'absolute',
+      right: spacing.lg,
+      bottom: spacing.xl,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: c.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.lg,
+    },
+    fabPressed: {
+      backgroundColor: c.primaryDark,
+      transform: [{ scale: 0.96 }],
+    },
+  });

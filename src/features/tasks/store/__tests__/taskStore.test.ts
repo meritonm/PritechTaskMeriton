@@ -96,6 +96,7 @@ describe('getFilteredTasks', () => {
     dueDate: null,
     tags: [],
     createdAt: new Date().toISOString(),
+    history: [],
     ...overrides,
   });
 

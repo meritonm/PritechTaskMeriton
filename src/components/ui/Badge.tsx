@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useThemedStyles } from '@/theme';
 
 type BadgeTone = 'default' | 'success' | 'danger' | 'warning' | 'primary';
 
@@ -11,6 +11,8 @@ interface BadgeProps {
 }
 
 export function Badge({ label, tone = 'default', style }: BadgeProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.base, styles[tone], style]}>
       <Text style={[styles.label, styles[`${tone}Label` as const]]}>{label}</Text>
@@ -18,45 +20,46 @@ export function Badge({ label, tone = 'default', style }: BadgeProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-  },
-  default: {
-    backgroundColor: colors.border,
-  },
-  success: {
-    backgroundColor: colors.successLight,
-  },
-  danger: {
-    backgroundColor: colors.dangerLight,
-  },
-  warning: {
-    backgroundColor: colors.warningLight,
-  },
-  primary: {
-    backgroundColor: colors.primaryLight,
-  },
-  label: {
-    ...typography.caption,
-    fontWeight: '600',
-  },
-  defaultLabel: {
-    color: colors.textMuted,
-  },
-  successLabel: {
-    color: colors.success,
-  },
-  dangerLabel: {
-    color: colors.danger,
-  },
-  warningLabel: {
-    color: colors.warning,
-  },
-  primaryLabel: {
-    color: colors.primary,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    base: {
+      borderRadius: 999,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      alignSelf: 'flex-start',
+    },
+    default: {
+      backgroundColor: c.border,
+    },
+    success: {
+      backgroundColor: c.successLight,
+    },
+    danger: {
+      backgroundColor: c.dangerLight,
+    },
+    warning: {
+      backgroundColor: c.warningLight,
+    },
+    primary: {
+      backgroundColor: c.primaryLight,
+    },
+    label: {
+      ...typography.caption,
+      fontWeight: '600',
+    },
+    defaultLabel: {
+      color: c.textMuted,
+    },
+    successLabel: {
+      color: c.success,
+    },
+    dangerLabel: {
+      color: c.danger,
+    },
+    warningLabel: {
+      color: c.warning,
+    },
+    primaryLabel: {
+      color: c.primary,
+    },
+  });

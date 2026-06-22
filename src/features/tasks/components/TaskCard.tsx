@@ -11,15 +11,20 @@ import { Task } from '@/features/tasks/types/task.types';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, shadows, spacing, typography } from '@/theme';
+import { cancelTaskReminder, rescheduleTaskReminder } from '@/lib/notifications';
+import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface TaskCardProps {
   task: Task;
+  onDrag?: () => void;
+  dragging?: boolean;
 }
 
-export function TaskCard({ task }: TaskCardProps) {
+export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const swipeableRef = useRef<Swipeable>(null);
@@ -41,6 +46,10 @@ export function TaskCard({ task }: TaskCardProps) {
   const handleToggle = () => {
     haptics.light();
     toggleTaskStatus(task.id);
+    const updated = useTaskStore.getState().tasks.find((item) => item.id === task.id);
+    if (updated) {
+      void rescheduleTaskReminder(updated);
+    }
   };
 
   const confirmDelete = () => {
@@ -51,6 +60,7 @@ export function TaskCard({ task }: TaskCardProps) {
         style: 'destructive',
         onPress: () => {
           haptics.warning();
+          void cancelTaskReminder(task.id);
           deleteTask(task.id);
         },
       },
@@ -97,7 +107,13 @@ export function TaskCard({ task }: TaskCardProps) {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(`/task/${task.id}`)}
-          style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+          onLongPress={onDrag}
+          delayLongPress={220}
+          style={({ pressed }) => [
+            styles.card,
+            pressed && styles.cardPressed,
+            dragging && styles.cardDragging,
+          ]}
         >
           <View style={[styles.accent, { backgroundColor: priorityColor }]} />
 
@@ -126,7 +142,7 @@ export function TaskCard({ task }: TaskCardProps) {
             ) : null}
 
             <View style={styles.metaRow}>
-              <View style={[styles.priorityPill, { backgroundColor: `${priorityColor}14` }]}>
+              <View style={[styles.priorityPill, { backgroundColor: `${priorityColor}22` }]}>
                 <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
                 <Text style={[styles.priorityText, { color: priorityColor }]}>
                   {t(`priority.${task.priority}`)}
@@ -160,128 +176,133 @@ export function TaskCard({ task }: TaskCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  swipeContainer: {
-    borderRadius: radius.lg,
-  },
-  swipeAction: {
-    backgroundColor: colors.danger,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 88,
-    borderRadius: radius.lg,
-    marginLeft: spacing.sm,
-  },
-  swipeActionText: {
-    ...typography.caption,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.lg,
-    paddingLeft: spacing.lg + spacing.xs,
-    paddingRight: spacing.md,
-    overflow: 'hidden',
-    ...shadows.sm,
-  },
-  cardPressed: {
-    backgroundColor: colors.surfaceMuted,
-  },
-  accent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  content: {
-    flex: 1,
-    gap: 6,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.subtitle,
-    color: colors.text,
-    flex: 1,
-    lineHeight: 22,
-  },
-  titleCompleted: {
-    textDecorationLine: 'line-through',
-    color: colors.textSubtle,
-  },
-  description: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: 2,
-  },
-  priorityPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-  priorityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  priorityText: {
-    ...typography.caption,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  metaText: {
-    ...typography.caption,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  metaTextOverdue: {
-    color: colors.danger,
-    fontWeight: '700',
-  },
-  tagDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    swipeContainer: {
+      borderRadius: radius.lg,
+    },
+    swipeAction: {
+      backgroundColor: c.danger,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 88,
+      borderRadius: radius.lg,
+      marginLeft: spacing.sm,
+    },
+    swipeActionText: {
+      ...typography.caption,
+      color: '#FFFFFF',
+      fontWeight: '700',
+      marginTop: 2,
+    },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingVertical: spacing.lg,
+      paddingLeft: spacing.lg + spacing.xs,
+      paddingRight: spacing.md,
+      overflow: 'hidden',
+      ...shadows.sm,
+    },
+    cardPressed: {
+      backgroundColor: c.surfaceMuted,
+    },
+    cardDragging: {
+      borderColor: c.primary,
+      ...shadows.lg,
+    },
+    accent: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 1,
+    },
+    checkboxChecked: {
+      backgroundColor: c.success,
+      borderColor: c.success,
+    },
+    content: {
+      flex: 1,
+      gap: 6,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.subtitle,
+      color: c.text,
+      flex: 1,
+      lineHeight: 22,
+    },
+    titleCompleted: {
+      textDecorationLine: 'line-through',
+      color: c.textSubtle,
+    },
+    description: {
+      ...typography.caption,
+      color: c.textMuted,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: 2,
+    },
+    priorityPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 3,
+    },
+    priorityDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    priorityText: {
+      ...typography.caption,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    metaText: {
+      ...typography.caption,
+      fontSize: 12,
+      color: c.textMuted,
+    },
+    metaTextOverdue: {
+      color: c.danger,
+      fontWeight: '700',
+    },
+    tagDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+  });

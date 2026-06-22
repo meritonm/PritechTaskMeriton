@@ -5,7 +5,25 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
-import { Task, TaskStatus } from '@/features/tasks/types/task.types';
+import {
+  Task,
+  TaskHistoryEntry,
+  TaskHistoryType,
+  TaskStatus,
+} from '@/features/tasks/types/task.types';
+
+function historyEntry(type: TaskHistoryType, fields?: string[]): TaskHistoryEntry {
+  return {
+    id: Crypto.randomUUID(),
+    type,
+    timestamp: new Date().toISOString(),
+    ...(fields && fields.length > 0 ? { fields } : {}),
+  };
+}
+
+function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
 
 interface TaskStore {
   tasks: Task[];
@@ -17,6 +35,7 @@ interface TaskStore {
   toggleTaskStatus: (id: string) => void;
   deleteTask: (id: string) => void;
   importTasks: (tasks: Task[]) => void;
+  setTasks: (tasks: Task[]) => void;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (filter: 'all' | TaskStatus | 'overdue') => void;
 }
@@ -40,6 +59,7 @@ export const useTaskStore = create<TaskStore>()(
               dueDate: input.dueDate ?? null,
               tags: input.tags ?? [],
               createdAt: new Date().toISOString(),
+              history: [historyEntry('created')],
             },
             ...state.tasks,
           ],
@@ -47,32 +67,60 @@ export const useTaskStore = create<TaskStore>()(
 
       updateTask: (id, input) =>
         set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  ...(input.title !== undefined ? { title: input.title.trim() } : {}),
-                  ...(input.description !== undefined
-                    ? { description: input.description.trim() }
-                    : {}),
-                  ...(input.priority !== undefined ? { priority: input.priority } : {}),
-                  ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
-                  ...(input.tags !== undefined ? { tags: input.tags } : {}),
-                }
-              : task,
-          ),
+          tasks: state.tasks.map((task) => {
+            if (task.id !== id) {
+              return task;
+            }
+
+            const changedFields: string[] = [];
+            const next = { ...task };
+
+            if (input.title !== undefined && input.title.trim() !== task.title) {
+              next.title = input.title.trim();
+              changedFields.push('title');
+            }
+            if (input.description !== undefined && input.description.trim() !== task.description) {
+              next.description = input.description.trim();
+              changedFields.push('description');
+            }
+            if (input.priority !== undefined && input.priority !== task.priority) {
+              next.priority = input.priority;
+              changedFields.push('priority');
+            }
+            if (input.dueDate !== undefined && input.dueDate !== task.dueDate) {
+              next.dueDate = input.dueDate;
+              changedFields.push('dueDate');
+            }
+            if (input.tags !== undefined && !arraysEqual(input.tags, task.tags)) {
+              next.tags = input.tags;
+              changedFields.push('tags');
+            }
+
+            if (changedFields.length === 0) {
+              return task;
+            }
+
+            next.history = [historyEntry('updated', changedFields), ...task.history];
+            return next;
+          }),
         })),
 
       toggleTaskStatus: (id) =>
         set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  status: task.status === 'completed' ? 'pending' : 'completed',
-                }
-              : task,
-          ),
+          tasks: state.tasks.map((task) => {
+            if (task.id !== id) {
+              return task;
+            }
+            const nextStatus: TaskStatus = task.status === 'completed' ? 'pending' : 'completed';
+            return {
+              ...task,
+              status: nextStatus,
+              history: [
+                historyEntry(nextStatus === 'completed' ? 'completed' : 'reopened'),
+                ...task.history,
+              ],
+            };
+          }),
         })),
 
       deleteTask: (id) =>
@@ -85,12 +133,25 @@ export const useTaskStore = create<TaskStore>()(
           tasks: [...tasks, ...state.tasks],
         })),
 
+      setTasks: (tasks) => set({ tasks }),
+
       setSearchQuery: (query) => set({ searchQuery: query }),
       setStatusFilter: (filter) => set({ statusFilter: filter }),
     }),
     {
       name: 'tasks-storage',
+      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
+      migrate: (persisted) => {
+        const state = persisted as { tasks?: Task[] } | undefined;
+        if (state?.tasks) {
+          state.tasks = state.tasks.map((task) => ({
+            ...task,
+            history: task.history ?? [historyEntry('created')],
+          }));
+        }
+        return state as never;
+      },
       onRehydrateStorage: () => (_state, error) => {
         if (error) {
           console.warn('Failed to restore tasks from storage', error);

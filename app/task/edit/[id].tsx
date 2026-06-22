@@ -6,6 +6,7 @@ import { Screen } from '@/components/ui/Screen';
 import { TaskForm } from '@/features/tasks/components/TaskForm';
 import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
+import { rescheduleTaskReminder } from '@/lib/notifications';
 
 export default function EditTaskScreen() {
   const router = useRouter();
@@ -28,6 +29,10 @@ export default function EditTaskScreen() {
 
   const handleSubmit = (values: TaskFormValues) => {
     updateTask(task.id, values);
+    const updated = useTaskStore.getState().tasks.find((item) => item.id === task.id);
+    if (updated) {
+      void rescheduleTaskReminder(updated);
+    }
     router.back();
   };
 

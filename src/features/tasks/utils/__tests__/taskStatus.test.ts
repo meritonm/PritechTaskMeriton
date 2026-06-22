@@ -17,6 +17,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     dueDate: null,
     tags: [],
     createdAt: new Date().toISOString(),
+    history: [],
     ...overrides,
   };
 }

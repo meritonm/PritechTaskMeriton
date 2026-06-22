@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useSettingsStore } from '@/features/settings/store/settingsStore';
 import { AppLanguage, SUPPORTED_LANGUAGES } from '@/i18n';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing, ThemeColors, typography, useThemedStyles } from '@/theme';
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'EN',
@@ -12,6 +12,7 @@ const LANGUAGE_LABELS: Record<AppLanguage, string> = {
 export function LanguageSwitcher() {
   const language = useSettingsStore((state) => state.language);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -35,31 +36,32 @@ export function LanguageSwitcher() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.pill,
-    padding: 3,
-    gap: 2,
-  },
-  segment: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  segmentSelected: {
-    backgroundColor: colors.surface,
-  },
-  label: {
-    ...typography.caption,
-    fontWeight: '700',
-    color: colors.textMuted,
-    letterSpacing: 0.5,
-  },
-  labelSelected: {
-    color: colors.primary,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.pill,
+      padding: 3,
+      gap: 2,
+    },
+    segment: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      minWidth: 40,
+      alignItems: 'center',
+    },
+    segmentSelected: {
+      backgroundColor: c.surface,
+    },
+    label: {
+      ...typography.caption,
+      fontWeight: '700',
+      color: c.textMuted,
+      letterSpacing: 0.5,
+    },
+    labelSelected: {
+      color: c.primary,
+    },
+  });

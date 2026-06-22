@@ -8,14 +8,18 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { Screen } from '@/components/ui/Screen';
+import { TaskHistory } from '@/features/tasks/components/TaskHistory';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, shadows, spacing, typography } from '@/theme';
+import { cancelTaskReminder, rescheduleTaskReminder } from '@/lib/notifications';
+import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 export default function TaskDetailScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = useTaskStore((state) => state.tasks.find((item) => item.id === id));
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
@@ -44,6 +48,7 @@ export default function TaskDetailScreen() {
         style: 'destructive',
         onPress: () => {
           haptics.warning();
+          void cancelTaskReminder(task.id);
           deleteTask(task.id);
           router.back();
         },
@@ -88,7 +93,7 @@ export default function TaskDetailScreen() {
               <Text style={styles.sectionLabel}>{t('detail.tagsLabel')}</Text>
               <View style={styles.tagsRow}>
                 {task.tags.map((tag) => (
-                  <View key={tag} style={[styles.tag, { backgroundColor: `${colors.tag[tag]}18` }]}>
+                  <View key={tag} style={[styles.tag, { backgroundColor: `${colors.tag[tag]}22` }]}>
                     <Text style={[styles.tagText, { color: colors.tag[tag] }]}>
                       {t(`tags.${tag}`)}
                     </Text>
@@ -99,6 +104,8 @@ export default function TaskDetailScreen() {
           ) : null}
         </View>
 
+        <TaskHistory history={task.history} />
+
         <View style={styles.actions}>
           <Button
             label={task.status === 'completed' ? t('detail.markPending') : t('detail.markCompleted')}
@@ -106,6 +113,10 @@ export default function TaskDetailScreen() {
             onPress={() => {
               haptics.light();
               toggleTaskStatus(task.id);
+              const updated = useTaskStore.getState().tasks.find((item) => item.id === task.id);
+              if (updated) {
+                void rescheduleTaskReminder(updated);
+              }
             }}
           />
           <Button
@@ -130,101 +141,104 @@ function InfoItem({
   icon,
   label,
   value,
-  valueColor = colors.text,
+  valueColor,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
   valueColor?: string;
 }) {
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.infoItem}>
       <View style={styles.infoLabelRow}>
         <Ionicons name={icon} size={16} color={colors.textMuted} />
         <Text style={styles.infoLabel}>{label}</Text>
       </View>
-      <Text style={[styles.infoValue, { color: valueColor }]}>{value}</Text>
+      <Text style={[styles.infoValue, { color: valueColor ?? colors.text }]}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.md,
-    ...shadows.sm,
-  },
-  highPriorityCard: {
-    borderColor: colors.danger,
-    borderWidth: 1.5,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-    flex: 1,
-  },
-  sectionLabel: {
-    ...typography.label,
-    color: colors.textMuted,
-  },
-  body: {
-    ...typography.body,
-    color: colors.text,
-    lineHeight: 24,
-  },
-  infoGrid: {
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  infoItem: {
-    gap: spacing.xs,
-  },
-  infoLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  infoLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  infoValue: {
-    ...typography.body,
-    fontWeight: '500',
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  tag: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  tagText: {
-    ...typography.caption,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  actions: {
-    gap: spacing.md,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    content: {
+      gap: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: spacing.lg,
+      gap: spacing.md,
+      ...shadows.sm,
+    },
+    highPriorityCard: {
+      borderColor: c.danger,
+      borderWidth: 1.5,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    title: {
+      ...typography.title,
+      color: c.text,
+      flex: 1,
+    },
+    sectionLabel: {
+      ...typography.label,
+      color: c.textMuted,
+    },
+    body: {
+      ...typography.body,
+      color: c.text,
+      lineHeight: 24,
+    },
+    infoGrid: {
+      gap: spacing.md,
+      marginTop: spacing.sm,
+    },
+    infoItem: {
+      gap: spacing.xs,
+    },
+    infoLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    infoLabel: {
+      ...typography.caption,
+      color: c.textMuted,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    infoValue: {
+      ...typography.body,
+      fontWeight: '500',
+    },
+    tagsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    tag: {
+      borderRadius: 999,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+    },
+    tagText: {
+      ...typography.caption,
+      fontWeight: '600',
+      textTransform: 'capitalize',
+    },
+    actions: {
+      gap: spacing.md,
+    },
+  });

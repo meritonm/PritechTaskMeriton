@@ -10,7 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import { colors, radius, shadows, spacing, typography } from '@/theme';
+import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -24,12 +24,16 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
-const labelColors: Record<ButtonVariant, string> = {
-  primary: '#FFFFFF',
-  secondary: colors.text,
-  danger: '#FFFFFF',
-  ghost: colors.primary,
-};
+function getLabelColor(variant: ButtonVariant, c: ThemeColors): string {
+  switch (variant) {
+    case 'secondary':
+      return c.text;
+    case 'ghost':
+      return c.primary;
+    default:
+      return '#FFFFFF';
+  }
+}
 
 export function Button({
   label,
@@ -40,8 +44,11 @@ export function Button({
   icon,
   style,
 }: ButtonProps) {
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const scale = useMemo(() => new Animated.Value(1), []);
   const isInteractive = !disabled && !loading;
+  const labelColor = getLabelColor(variant, colors);
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -70,11 +77,11 @@ export function Button({
       >
         <View style={styles.content}>
           {loading ? (
-            <ActivityIndicator size="small" color={labelColors[variant]} />
+            <ActivityIndicator size="small" color={labelColor} />
           ) : (
             <>
-              {icon ? <Ionicons name={icon} size={18} color={labelColors[variant]} /> : null}
-              <Text style={[styles.label, { color: labelColors[variant] }]}>{label}</Text>
+              {icon ? <Ionicons name={icon} size={18} color={labelColor} /> : null}
+              <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
             </>
           )}
         </View>
@@ -83,43 +90,44 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  danger: {
-    backgroundColor: colors.danger,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  label: {
-    ...typography.label,
-    fontWeight: '600',
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    base: {
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 52,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    primary: {
+      backgroundColor: c.primary,
+    },
+    secondary: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    danger: {
+      backgroundColor: c.danger,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    label: {
+      ...typography.label,
+      fontWeight: '600',
+    },
+  });

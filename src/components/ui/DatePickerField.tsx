@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, spacing, typography } from '@/theme';
+import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface DatePickerFieldProps {
   label: string;
@@ -16,6 +16,8 @@ interface DatePickerFieldProps {
 
 export function DatePickerField({ label, value, onChange, error }: DatePickerFieldProps) {
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const [showPicker, setShowPicker] = useState(false);
   const selectedDate = value ? parseISO(value) : new Date();
 
@@ -66,47 +68,48 @@ export function DatePickerField({ label, value, onChange, error }: DatePickerFie
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.label,
-    color: colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  value: {
-    ...typography.body,
-    color: colors.text,
-    flex: 1,
-  },
-  placeholder: {
-    color: colors.textMuted,
-  },
-  clearButton: {
-    padding: spacing.xs,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.label,
+      color: c.text,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    input: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    inputError: {
+      borderColor: c.danger,
+    },
+    value: {
+      ...typography.body,
+      color: c.text,
+      flex: 1,
+    },
+    placeholder: {
+      color: c.textMuted,
+    },
+    clearButton: {
+      padding: spacing.xs,
+    },
+    error: {
+      ...typography.caption,
+      color: c.danger,
+    },
+  });

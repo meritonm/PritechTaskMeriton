@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface TextFieldProps extends TextInputProps {
   label: string;
@@ -10,6 +10,8 @@ interface TextFieldProps extends TextInputProps {
 
 export function TextField({ label, error, style, onFocus, onBlur, ...props }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -37,32 +39,33 @@ export function TextField({ label, error, style, onFocus, onBlur, ...props }: Te
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.label,
-    color: colors.text,
-  },
-  input: {
-    ...typography.body,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    color: colors.text,
-  },
-  inputFocused: {
-    borderColor: colors.primary,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.label,
+      color: c.text,
+    },
+    input: {
+      ...typography.body,
+      backgroundColor: c.surface,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      color: c.text,
+    },
+    inputFocused: {
+      borderColor: c.primary,
+    },
+    inputError: {
+      borderColor: c.danger,
+    },
+    error: {
+      ...typography.caption,
+      color: c.danger,
+    },
+  });

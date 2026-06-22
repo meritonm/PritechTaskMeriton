@@ -5,6 +5,7 @@ import { TaskForm } from '@/features/tasks/components/TaskForm';
 import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { haptics } from '@/lib/haptics';
+import { scheduleTaskReminder } from '@/lib/notifications';
 
 export default function CreateTaskScreen() {
   const router = useRouter();
@@ -13,6 +14,10 @@ export default function CreateTaskScreen() {
   const handleSubmit = (values: TaskFormValues) => {
     addTask(values);
     haptics.success();
+    const created = useTaskStore.getState().tasks[0];
+    if (created) {
+      void scheduleTaskReminder(created);
+    }
     router.back();
   };
 

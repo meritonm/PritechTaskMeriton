@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { useImportSampleTasks } from '@/features/tasks/hooks/useImportSampleTasks';
-import { colors, radius, spacing, typography } from '@/theme';
+import { radius, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface ImportSampleButtonProps {
   compact?: boolean;
@@ -12,6 +12,8 @@ interface ImportSampleButtonProps {
 
 export function ImportSampleButton({ compact = false }: ImportSampleButtonProps) {
   const { t } = useTranslation();
+  const colors = useColors();
+  const styles = useThemedStyles(createStyles);
   const { runImport, isImporting } = useImportSampleTasks();
 
   if (compact) {
@@ -43,22 +45,23 @@ export function ImportSampleButton({ compact = false }: ImportSampleButtonProps)
   );
 }
 
-const styles = StyleSheet.create({
-  compact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  compactPressed: {
-    opacity: 0.7,
-  },
-  compactLabel: {
-    ...typography.caption,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-});
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    compact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      backgroundColor: c.primaryLight,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+    },
+    compactPressed: {
+      opacity: 0.7,
+    },
+    compactLabel: {
+      ...typography.caption,
+      color: c.primary,
+      fontWeight: '600',
+    },
+  });
