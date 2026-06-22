@@ -2,9 +2,9 @@ import { createContext, ReactNode, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { useSettingsStore } from '@/features/settings/store/settingsStore';
-import { darkColors, lightColors, ThemeColors } from '@/theme/colors';
+import { darkColors, lightColors, ThemeColors, ThemePreference } from '@/theme/colors';
 
-export type ThemePreference = 'light' | 'dark' | 'system';
+export type { ThemePreference } from '@/theme/colors';
 export type ColorScheme = 'light' | 'dark';
 
 interface ThemeContextValue {

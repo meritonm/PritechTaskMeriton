@@ -1,3 +1,5 @@
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 export interface ThemeColors {
   background: string;
   surface: string;
