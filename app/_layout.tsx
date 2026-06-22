@@ -1,0 +1,39 @@
+import 'react-native-gesture-handler';
+
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
+
+import { AppProviders } from '@/providers/AppProviders';
+import { colors, typography } from '@/theme';
+
+export default function RootLayout() {
+  return (
+    <AppProviders>
+      <StatusBar style="dark" />
+      <RootStack />
+    </AppProviders>
+  );
+}
+
+function RootStack() {
+  const { t } = useTranslation();
+
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontWeight: '700', fontSize: typography.subtitle.fontSize },
+        headerShadowVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="task/create" options={{ title: t('headers.newTask') }} />
+      <Stack.Screen name="task/[id]" options={{ title: t('headers.taskDetails') }} />
+      <Stack.Screen name="task/edit/[id]" options={{ title: t('headers.editTask') }} />
+    </Stack>
+  );
+}
