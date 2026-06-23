@@ -10,6 +10,7 @@ import { useToastStore } from '@/lib/toastStore';
 interface DeleteOptions {
   confirm?: boolean;
   onDeleted?: () => void;
+  showUndoToast?: boolean;
 }
 
 export function useDeleteTaskWithUndo() {
@@ -18,21 +19,23 @@ export function useDeleteTaskWithUndo() {
   const restoreTask = useTaskStore((state) => state.restoreTask);
   const showToast = useToastStore((state) => state.show);
 
-  const performDelete = (task: Task, onDeleted?: () => void) => {
+  const performDelete = (task: Task, options: Pick<DeleteOptions, 'onDeleted' | 'showUndoToast'> = {}) => {
     haptics.warning();
     void cancelTaskReminder(task.id);
     deleteTask(task.id);
-    showToast(t('toast.taskDeleted', { title: task.title }), {
-      type: 'info',
-      action: {
-        label: t('common.undo'),
-        onPress: () => {
-          restoreTask(task);
-          void rescheduleTaskReminder(task);
+    if (options.showUndoToast) {
+      showToast(t('toast.taskDeleted', { title: task.title }), {
+        type: 'info',
+        action: {
+          label: t('common.undo'),
+          onPress: () => {
+            restoreTask(task);
+            void rescheduleTaskReminder(task);
+          },
         },
-      },
-    });
-    onDeleted?.();
+      });
+    }
+    options.onDeleted?.();
   };
 
   const deleteWithUndo = (task: Task, options: DeleteOptions = {}) => {
@@ -42,13 +45,20 @@ export function useDeleteTaskWithUndo() {
         {
           text: t('common.delete'),
           style: 'destructive',
-          onPress: () => performDelete(task, options.onDeleted),
+          onPress: () =>
+            performDelete(task, {
+              onDeleted: options.onDeleted,
+              showUndoToast: options.showUndoToast,
+            }),
         },
       ]);
       return;
     }
 
-    performDelete(task, options.onDeleted);
+    performDelete(task, {
+      onDeleted: options.onDeleted,
+      showUndoToast: options.showUndoToast,
+    });
   };
 
   return { deleteWithUndo };

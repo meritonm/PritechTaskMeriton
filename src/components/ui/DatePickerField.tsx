@@ -12,13 +12,14 @@ interface DatePickerFieldProps {
   value: string | null;
   onChange: (value: string | null) => void;
   error?: string;
+  autoOpen?: boolean;
 }
 
-export function DatePickerField({ label, value, onChange, error }: DatePickerFieldProps) {
+export function DatePickerField({ label, value, onChange, error, autoOpen = false }: DatePickerFieldProps) {
   const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(autoOpen);
   const selectedDate = value ? parseISO(value) : new Date();
 
   return (

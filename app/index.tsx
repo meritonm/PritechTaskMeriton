@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,6 +52,12 @@ const separatorStyles = StyleSheet.create({
 
 export default function TaskListScreen() {
   const router = useRouter();
+  const { expandFilters, swipeDemo } = useLocalSearchParams<{
+    expandFilters?: string;
+    swipeDemo?: string;
+  }>();
+  const expandFiltersOnLoad = expandFilters === '1';
+  const swipeDemoOnLoad = swipeDemo === '1';
   const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
@@ -115,11 +121,21 @@ export default function TaskListScreen() {
 
   const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<Task>) => (
     <ScaleDecorator>
-      <TaskCard task={item} onDrag={canReorder ? drag : undefined} dragging={isActive} />
+      <TaskCard
+        task={item}
+        onDrag={canReorder ? drag : undefined}
+        dragging={isActive}
+        initialSwipeOpen={swipeDemoOnLoad && item.id === sortedTasks[0]?.id}
+      />
     </ScaleDecorator>
   );
 
-  const renderTaskItem = (item: Task) => <TaskCard task={item} />;
+  const renderTaskItem = (item: Task) => (
+    <TaskCard
+      task={item}
+      initialSwipeOpen={swipeDemoOnLoad && item.id === sortedTasks[0]?.id}
+    />
+  );
 
   const renderSectionHeader = ({ section }: { section: TaskSection }) => {
     if (!section.title) {
@@ -235,7 +251,7 @@ export default function TaskListScreen() {
               <TaskProgress />
               <TaskSearchBar />
               <TaskFilters />
-              <TaskListSortBar />
+              <TaskListSortBar initialExpanded={expandFiltersOnLoad} />
             </View>
           ) : null}
 

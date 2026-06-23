@@ -62,20 +62,19 @@ const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     content: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
+      paddingTop: spacing.sm,
       paddingBottom: spacing.xxl,
-      gap: spacing.xl,
+      gap: spacing.lg,
     },
     hero: {
       alignItems: 'center',
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      gap: spacing.sm,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
     },
     heroIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: radius.lg,
+      width: 48,
+      height: 48,
+      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },

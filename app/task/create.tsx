@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Screen } from '@/components/ui/Screen';
@@ -12,6 +12,7 @@ import { useToastStore } from '@/lib/toastStore';
 
 export default function CreateTaskScreen() {
   const router = useRouter();
+  const { openDatePicker } = useLocalSearchParams<{ openDatePicker?: string }>();
   const { t } = useTranslation();
   const addTask = useTaskStore((state) => state.addTask);
   const showToast = useToastStore((state) => state.show);
@@ -31,7 +32,11 @@ export default function CreateTaskScreen() {
 
   return (
     <Screen>
-      <TaskForm mode="create" onSubmit={handleSubmit} />
+      <TaskForm
+        mode="create"
+        onSubmit={handleSubmit}
+        autoOpenDueDatePicker={openDatePicker === '1'}
+      />
     </Screen>
   );
 }

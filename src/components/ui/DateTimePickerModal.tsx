@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import { radius, spacing, ThemeColors, typography, useThemedStyles } from '@/theme';
+import { radius, spacing, ThemeColors, typography, useTheme, useThemedStyles } from '@/theme';
 
 const FADE_MS = 280;
 const SLIDE_MS = 320;
@@ -34,6 +34,7 @@ export function DateTimePickerModal({
   onDismiss,
 }: DateTimePickerModalProps) {
   const { t } = useTranslation();
+  const { scheme, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [draft, setDraft] = useState(value);
   const [mounted, setMounted] = useState(visible);
@@ -109,6 +110,7 @@ export function DateTimePickerModal({
         value={value}
         mode={mode}
         display="default"
+        themeVariant={scheme}
         onChange={(event: DateTimePickerEvent, date?: Date) => {
           if (event.type === 'dismissed') {
             onDismiss();
@@ -147,6 +149,8 @@ export function DateTimePickerModal({
             value={draft}
             mode={mode}
             display="spinner"
+            themeVariant={scheme}
+            textColor={colors.text}
             onChange={(_event, date) => {
               if (date) {
                 setDraft(date);

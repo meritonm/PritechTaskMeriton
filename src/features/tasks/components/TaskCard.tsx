@@ -21,9 +21,10 @@ interface TaskCardProps {
   task: Task;
   onDrag?: () => void;
   dragging?: boolean;
+  initialSwipeOpen?: boolean;
 }
 
-export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
+export function TaskCard({ task, onDrag, dragging = false, initialSwipeOpen = false }: TaskCardProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const colors = useColors();
@@ -43,6 +44,14 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
       useNativeDriver: true,
     }).start();
   }, [enter]);
+
+  useEffect(() => {
+    if (!initialSwipeOpen) {
+      return;
+    }
+    const timer = setTimeout(() => swipeableRef.current?.openRight(), 400);
+    return () => clearTimeout(timer);
+  }, [initialSwipeOpen]);
 
   const displayStatus = getTaskDisplayStatus(task);
   const isCompleted = displayStatus === 'completed';
@@ -69,7 +78,7 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
   };
 
   const handleDelete = (confirm = false) => {
-    deleteWithUndo(task, { confirm });
+    deleteWithUndo(task, { confirm, showUndoToast: !confirm });
   };
 
   const confirmDelete = () => {

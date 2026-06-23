@@ -19,9 +19,16 @@ interface TaskFormProps {
   mode: 'create' | 'edit';
   onSubmit: (values: TaskFormValues) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  autoOpenDueDatePicker?: boolean;
 }
 
-export function TaskForm({ defaultValues, mode, onSubmit, onDirtyChange }: TaskFormProps) {
+export function TaskForm({
+  defaultValues,
+  mode,
+  onSubmit,
+  onDirtyChange,
+  autoOpenDueDatePicker = false,
+}: TaskFormProps) {
   const { t } = useTranslation();
   const {
     control,
@@ -97,7 +104,12 @@ export function TaskForm({ defaultValues, mode, onSubmit, onDirtyChange }: TaskF
         control={control}
         name="dueDate"
         render={({ field: { onChange, value } }) => (
-          <DatePickerField label={t('form.dueDateLabel')} value={value} onChange={onChange} />
+          <DatePickerField
+            label={t('form.dueDateLabel')}
+            value={value}
+            onChange={onChange}
+            autoOpen={autoOpenDueDatePicker}
+          />
         )}
       />
 

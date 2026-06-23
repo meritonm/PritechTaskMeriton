@@ -10,7 +10,11 @@ import { radius, spacing, ThemeColors, typography, useColors, useThemedStyles } 
 
 const SORT_OPTIONS: TaskSortBy[] = ['manual', 'dueDate', 'priority', 'created'];
 
-export function TaskListSortBar() {
+interface TaskListSortBarProps {
+  initialExpanded?: boolean;
+}
+
+export function TaskListSortBar({ initialExpanded = false }: TaskListSortBarProps) {
   const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
@@ -18,7 +22,7 @@ export function TaskListSortBar() {
   const groupByDate = useTaskStore((state) => state.groupByDate);
   const setSortBy = useTaskStore((state) => state.setSortBy);
   const setGroupByDate = useTaskStore((state) => state.setGroupByDate);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initialExpanded);
 
   const hasActiveOptions = sortBy !== 'manual' || !groupByDate;
 
