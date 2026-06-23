@@ -236,6 +236,12 @@ npm test
 
 ---
 
+## Demo
+
+<video src="./docs/app-demo.mp4" controls width="100%"></video>
+
+---
+
 ## Screenshots
 
 | Task list | New task | Task detail |
