@@ -1,10 +1,10 @@
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { DateTimePickerModal } from '@/components/ui/DateTimePickerModal';
 import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface DatePickerFieldProps {
@@ -20,16 +20,6 @@ export function DatePickerField({ label, value, onChange, error }: DatePickerFie
   const styles = useThemedStyles(createStyles);
   const [showPicker, setShowPicker] = useState(false);
   const selectedDate = value ? parseISO(value) : new Date();
-
-  const handleChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-    }
-
-    if (date) {
-      onChange(format(date, 'yyyy-MM-dd'));
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -56,14 +46,16 @@ export function DatePickerField({ label, value, onChange, error }: DatePickerFie
         ) : null}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {showPicker ? (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleChange}
-        />
-      ) : null}
+      <DateTimePickerModal
+        visible={showPicker}
+        mode="date"
+        value={selectedDate}
+        onConfirm={(date) => {
+          onChange(format(date, 'yyyy-MM-dd'));
+          setShowPicker(false);
+        }}
+        onDismiss={() => setShowPicker(false)}
+      />
     </View>
   );
 }

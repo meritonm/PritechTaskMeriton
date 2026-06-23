@@ -68,7 +68,8 @@ const createStyles = (c: ThemeColors) =>
     container: {
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.sm,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xs,
     },
     chip: {
       flexDirection: 'row',

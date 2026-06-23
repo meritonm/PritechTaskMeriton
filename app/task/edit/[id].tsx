@@ -7,6 +7,7 @@ import { TaskForm } from '@/features/tasks/components/TaskForm';
 import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { rescheduleTaskReminder } from '@/lib/notifications';
+import { showReminderErrorAlert } from '@/lib/showReminderScheduleAlert';
 
 export default function EditTaskScreen() {
   const router = useRouter();
@@ -27,12 +28,17 @@ export default function EditTaskScreen() {
     );
   }
 
-  const handleSubmit = (values: TaskFormValues) => {
+  const handleSubmit = async (values: TaskFormValues) => {
     updateTask(task.id, values);
     const updated = useTaskStore.getState().tasks.find((item) => item.id === task.id);
-    if (updated) {
-      void rescheduleTaskReminder(updated);
+
+    if (updated?.reminderEnabled) {
+      const result = await rescheduleTaskReminder(updated);
+      showReminderErrorAlert(result, t);
+    } else if (updated) {
+      await rescheduleTaskReminder(updated);
     }
+
     router.back();
   };
 
@@ -45,6 +51,8 @@ export default function EditTaskScreen() {
           description: task.description,
           priority: task.priority,
           dueDate: task.dueDate,
+          reminderEnabled: task.reminderEnabled,
+          reminderTime: task.reminderTime,
           tags: task.tags,
         }}
         onSubmit={handleSubmit}

@@ -15,7 +15,18 @@ export const taskFormSchema = z.object({
   description: z.string().trim().max(300, 'validation.descriptionMax'),
   priority: z.enum(TASK_PRIORITIES),
   dueDate: z.string().nullable(),
+  reminderEnabled: z.boolean(),
+  reminderTime: z.string().nullable(),
   tags: z.array(z.enum(TASK_TAGS)),
-});
+})
+  .refine(
+    (data) => !data.reminderEnabled || (data.dueDate !== null && data.reminderTime !== null),
+    { message: 'validation.reminderNeedsDueDate', path: ['reminderEnabled'] },
+  )
+  .refine(
+    (data) =>
+      !data.reminderTime || /^\d{2}:\d{2}$/.test(data.reminderTime),
+    { message: 'validation.reminderTimeInvalid', path: ['reminderTime'] },
+  );
 
 export type TaskFormValues = z.infer<typeof taskFormSchema>;

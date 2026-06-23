@@ -4,11 +4,16 @@ import { Pressable, StyleSheet } from 'react-native';
 import { radius, ThemeColors, useColors, useTheme, useThemedStyles } from '@/theme';
 import { haptics } from '@/lib/haptics';
 
-export function ThemeSwitcher() {
+interface ThemeSwitcherProps {
+  compact?: boolean;
+}
+
+export function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
   const { scheme, toggle } = useTheme();
   const colors = useColors();
-  const styles = useThemedStyles(createStyles);
+  const styles = useThemedStyles((c) => createStyles(c, compact));
   const isDark = scheme === 'dark';
+  const iconSize = compact ? 16 : 18;
 
   return (
     <Pressable
@@ -22,16 +27,16 @@ export function ThemeSwitcher() {
       }}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Ionicons name={isDark ? 'sunny' : 'moon'} size={18} color={colors.primary} />
+      <Ionicons name={isDark ? 'sunny' : 'moon'} size={iconSize} color={colors.primary} />
     </Pressable>
   );
 }
 
-const createStyles = (c: ThemeColors) =>
+const createStyles = (c: ThemeColors, compact: boolean) =>
   StyleSheet.create({
     button: {
-      width: 40,
-      height: 40,
+      width: compact ? 34 : 40,
+      height: compact ? 34 : 40,
       borderRadius: radius.pill,
       backgroundColor: c.surfaceMuted,
       alignItems: 'center',

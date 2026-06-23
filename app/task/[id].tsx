@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { Screen } from '@/components/ui/Screen';
 import { TaskHistory } from '@/features/tasks/components/TaskHistory';
+import { TaskReminderPanel } from '@/features/tasks/components/TaskReminderPanel';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { haptics } from '@/lib/haptics';
@@ -103,6 +104,8 @@ export default function TaskDetailScreen() {
             </>
           ) : null}
         </View>
+
+        <TaskReminderPanel task={task} />
 
         <TaskHistory history={task.history} />
 

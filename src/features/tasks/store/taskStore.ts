@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
+import { format, isBefore, parseISO, startOfDay, subDays } from 'date-fns';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -7,6 +8,7 @@ import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import {
   Task,
+  TaskDisplayStatus,
   TaskHistoryEntry,
   TaskHistoryType,
   TaskStatus,
@@ -30,9 +32,10 @@ interface TaskStore {
   searchQuery: string;
   statusFilter: 'all' | TaskStatus | 'overdue';
 
-  addTask: (input: TaskFormValues) => void;
+  addTask: (input: TaskFormValues) => Task;
   updateTask: (id: string, input: Partial<TaskFormValues>) => void;
   toggleTaskStatus: (id: string) => void;
+  setTaskDisplayStatus: (id: string, status: TaskDisplayStatus) => void;
   deleteTask: (id: string) => void;
   importTasks: (tasks: Task[]) => void;
   setTasks: (tasks: Task[]) => void;
@@ -47,23 +50,27 @@ export const useTaskStore = create<TaskStore>()(
       searchQuery: '',
       statusFilter: 'all',
 
-      addTask: (input) =>
+      addTask: (input) => {
+        const task: Task = {
+          id: Crypto.randomUUID(),
+          title: input.title.trim(),
+          description: input.description?.trim() ?? '',
+          status: 'pending',
+          priority: input.priority,
+          dueDate: input.dueDate ?? null,
+          reminderEnabled: input.reminderEnabled ?? false,
+          reminderTime: input.reminderEnabled ? (input.reminderTime ?? '09:00') : null,
+          tags: input.tags ?? [],
+          createdAt: new Date().toISOString(),
+          history: [historyEntry('created')],
+        };
+
         set((state) => ({
-          tasks: [
-            {
-              id: Crypto.randomUUID(),
-              title: input.title.trim(),
-              description: input.description?.trim() ?? '',
-              status: 'pending',
-              priority: input.priority,
-              dueDate: input.dueDate ?? null,
-              tags: input.tags ?? [],
-              createdAt: new Date().toISOString(),
-              history: [historyEntry('created')],
-            },
-            ...state.tasks,
-          ],
-        })),
+          tasks: [task, ...state.tasks],
+        }));
+
+        return task;
+      },
 
       updateTask: (id, input) =>
         set((state) => ({
@@ -90,6 +97,17 @@ export const useTaskStore = create<TaskStore>()(
             if (input.dueDate !== undefined && input.dueDate !== task.dueDate) {
               next.dueDate = input.dueDate;
               changedFields.push('dueDate');
+            }
+            if (
+              input.reminderEnabled !== undefined &&
+              input.reminderEnabled !== task.reminderEnabled
+            ) {
+              next.reminderEnabled = input.reminderEnabled;
+              changedFields.push('reminderEnabled');
+            }
+            if (input.reminderTime !== undefined && input.reminderTime !== task.reminderTime) {
+              next.reminderTime = input.reminderTime;
+              changedFields.push('reminderTime');
             }
             if (input.tags !== undefined && !arraysEqual(input.tags, task.tags)) {
               next.tags = input.tags;
@@ -123,6 +141,61 @@ export const useTaskStore = create<TaskStore>()(
           }),
         })),
 
+      setTaskDisplayStatus: (id, target) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) => {
+            if (task.id !== id) {
+              return task;
+            }
+
+            const current = getTaskDisplayStatus(task);
+            if (current === target) {
+              return task;
+            }
+
+            const today = format(new Date(), 'yyyy-MM-dd');
+            const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+
+            if (target === 'completed') {
+              return {
+                ...task,
+                status: 'completed',
+                history: [historyEntry('completed'), ...task.history],
+              };
+            }
+
+            if (target === 'pending') {
+              const next = { ...task, status: 'pending' as const };
+              if (
+                task.dueDate &&
+                isBefore(startOfDay(parseISO(task.dueDate)), startOfDay(new Date()))
+              ) {
+                next.dueDate = today;
+              }
+              return {
+                ...next,
+                history: [
+                  historyEntry(task.status === 'completed' ? 'reopened' : 'updated', ['status']),
+                  ...task.history,
+                ],
+              };
+            }
+
+            // overdue
+            const next = { ...task, status: 'pending' as const };
+            if (
+              !task.dueDate ||
+              !isBefore(startOfDay(parseISO(task.dueDate)), startOfDay(new Date()))
+            ) {
+              next.dueDate = yesterday;
+            }
+            return {
+              ...next,
+              history: [historyEntry('updated', ['dueDate']), ...task.history],
+            };
+          }),
+        })),
+
       deleteTask: (id) =>
         set((state) => ({
           tasks: state.tasks.filter((task) => task.id !== id),
@@ -140,7 +213,7 @@ export const useTaskStore = create<TaskStore>()(
     }),
     {
       name: 'tasks-storage',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => AsyncStorage),
       migrate: (persisted) => {
         const state = persisted as { tasks?: Task[] } | undefined;
@@ -148,6 +221,8 @@ export const useTaskStore = create<TaskStore>()(
           state.tasks = state.tasks.map((task) => ({
             ...task,
             history: task.history ?? [historyEntry('created')],
+            reminderEnabled: task.reminderEnabled ?? false,
+            reminderTime: task.reminderTime ?? null,
           }));
         }
         return state as never;

@@ -8,8 +8,10 @@ import { ThemePreference } from '@/theme/colors';
 interface SettingsStore {
   language: AppLanguage;
   themePreference: ThemePreference;
+  notificationsPrompted: boolean;
   setLanguage: (language: AppLanguage) => void;
   setThemePreference: (preference: ThemePreference) => void;
+  setNotificationsPrompted: (prompted: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -17,6 +19,7 @@ export const useSettingsStore = create<SettingsStore>()(
     (set) => ({
       language: (i18n.language as AppLanguage) ?? 'en',
       themePreference: 'system',
+      notificationsPrompted: false,
 
       setLanguage: (language) => {
         i18n.changeLanguage(language);
@@ -24,6 +27,8 @@ export const useSettingsStore = create<SettingsStore>()(
       },
 
       setThemePreference: (preference) => set({ themePreference: preference }),
+
+      setNotificationsPrompted: (prompted) => set({ notificationsPrompted: prompted }),
     }),
     {
       name: 'settings-storage',

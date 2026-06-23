@@ -44,6 +44,8 @@ export function mapApiTodoToTask(todo: DummyJsonTodo, index: number): Task {
     status: todo.completed ? 'completed' : 'pending',
     priority: pickPriority(index),
     dueDate: pickDueDate(index, todo.completed),
+    reminderEnabled: false,
+    reminderTime: null,
     tags: pickTags(index),
     createdAt: new Date().toISOString(),
     history: [{ id: Crypto.randomUUID(), type: 'created', timestamp: new Date().toISOString() }],

@@ -1,7 +1,19 @@
 import { addDays, formatISO, subDays } from 'date-fns';
 
+import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { Task } from '@/features/tasks/types/task.types';
 import { getFilteredTasks, useTaskStore } from '@/features/tasks/store/taskStore';
+
+const formTask = (overrides: Partial<TaskFormValues> = {}): TaskFormValues => ({
+  title: 'Task',
+  description: '',
+  priority: 'low' as const,
+  dueDate: null,
+  reminderEnabled: false,
+  reminderTime: null,
+  tags: [],
+  ...overrides,
+});
 
 const isoDate = (date: Date) => formatISO(date, { representation: 'date' });
 
@@ -14,13 +26,12 @@ describe('taskStore', () => {
   });
 
   it('adds a task with sensible defaults', () => {
-    useTaskStore.getState().addTask({
-      title: '  Write tests  ',
-      description: '',
-      priority: 'high',
-      dueDate: null,
-      tags: [],
-    });
+    useTaskStore.getState().addTask(
+      formTask({
+        title: '  Write tests  ',
+        priority: 'high',
+      }),
+    );
 
     const tasks = useTaskStore.getState().tasks;
     expect(tasks).toHaveLength(1);
@@ -31,20 +42,14 @@ describe('taskStore', () => {
 
   it('prepends new tasks so the latest is first', () => {
     const { addTask } = useTaskStore.getState();
-    addTask({ title: 'First', description: '', priority: 'low', dueDate: null, tags: [] });
-    addTask({ title: 'Second', description: '', priority: 'low', dueDate: null, tags: [] });
+    addTask(formTask({ title: 'First' }));
+    addTask(formTask({ title: 'Second' }));
 
     expect(useTaskStore.getState().tasks[0].title).toBe('Second');
   });
 
   it('toggles status between pending and completed', () => {
-    useTaskStore.getState().addTask({
-      title: 'Toggle me',
-      description: '',
-      priority: 'low',
-      dueDate: null,
-      tags: [],
-    });
+    useTaskStore.getState().addTask(formTask({ title: 'Toggle me' }));
     const id = useTaskStore.getState().tasks[0].id;
 
     useTaskStore.getState().toggleTaskStatus(id);
@@ -55,13 +60,7 @@ describe('taskStore', () => {
   });
 
   it('deletes a task by id', () => {
-    useTaskStore.getState().addTask({
-      title: 'Delete me',
-      description: '',
-      priority: 'low',
-      dueDate: null,
-      tags: [],
-    });
+    useTaskStore.getState().addTask(formTask({ title: 'Delete me' }));
     const id = useTaskStore.getState().tasks[0].id;
 
     useTaskStore.getState().deleteTask(id);
@@ -69,13 +68,9 @@ describe('taskStore', () => {
   });
 
   it('updates editable fields without touching status', () => {
-    useTaskStore.getState().addTask({
-      title: 'Original',
-      description: 'old',
-      priority: 'low',
-      dueDate: null,
-      tags: [],
-    });
+    useTaskStore.getState().addTask(
+      formTask({ title: 'Original', description: 'old' }),
+    );
     const id = useTaskStore.getState().tasks[0].id;
 
     useTaskStore.getState().updateTask(id, { title: 'Updated', priority: 'medium' });
@@ -94,6 +89,8 @@ describe('getFilteredTasks', () => {
     status: 'pending',
     priority: 'medium',
     dueDate: null,
+    reminderEnabled: false,
+    reminderTime: null,
     tags: [],
     createdAt: new Date().toISOString(),
     history: [],

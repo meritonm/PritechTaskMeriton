@@ -38,11 +38,12 @@ A clean, real-world task manager built with **React Native (Expo SDK 54)** and *
 - **Swipe-to-delete** gesture on task cards.
 - **Haptic feedback** on key actions (complete, delete, create, import).
 - **Smooth animations** — card entrance, animated list add/remove (LayoutAnimation).
-- **Pull-to-refresh** and **skeleton loading** while importing sample data.
+- **Pull-to-refresh** on the task list (local refresh only; API import stays on the dedicated button).
+- **Local reminders** — optional notification on the due date at a time you pick (no Firebase; device-only via `expo-notifications`).
 - **Unit tests** for store logic and utilities (Jest).
 - **ESLint + Prettier** for consistent code quality.
 
-> **Note on reminders:** local notifications are scheduled best-effort. In **Expo Go** (SDK 53+) notification support is limited, so for a reliable demo run a [development build](https://docs.expo.dev/develop/development-builds/introduction/). The app degrades gracefully if notifications are unavailable.
+> **Note on reminders:** **local on-device only** — no Firebase, no push server, no fitness/activity APIs. When testing in **Expo Go**, the system permission dialog applies to the **Expo Go** app (that is normal). Tap Allow for local due-date reminders. The task detail section is labeled **History** (not fitness activity).
 
 ---
 

@@ -8,7 +8,7 @@ interface TextFieldProps extends TextInputProps {
   error?: string;
 }
 
-export function TextField({ label, error, style, onFocus, onBlur, ...props }: TextFieldProps) {
+export function TextField({ label, error, style, onFocus, onBlur, autoCorrect = false, spellCheck = false, ...props }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
@@ -17,6 +17,8 @@ export function TextField({ label, error, style, onFocus, onBlur, ...props }: Te
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+        autoCorrect={autoCorrect}
+        spellCheck={spellCheck}
         placeholderTextColor={colors.textSubtle}
         style={[
           styles.input,

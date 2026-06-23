@@ -4,15 +4,35 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 
+import { AppSplashScreen } from '@/components/ui/AppSplashScreen';
 import { AppProviders } from '@/providers/AppProviders';
+import { NotificationDeepLinkHandler } from '@/lib/NotificationDeepLinkHandler';
+import { useNotificationPrompt } from '@/lib/useNotificationPrompt';
+import { useSplashReady } from '@/lib/useSplashReady';
 import { typography, useTheme } from '@/theme';
 
 export default function RootLayout() {
   return (
     <AppProviders>
+      <AppBootstrap />
+    </AppProviders>
+  );
+}
+
+function AppBootstrap() {
+  const ready = useSplashReady();
+  useNotificationPrompt(ready);
+
+  if (!ready) {
+    return <AppSplashScreen />;
+  }
+
+  return (
+    <>
+      <NotificationDeepLinkHandler />
       <ThemedStatusBar />
       <RootStack />
-    </AppProviders>
+    </>
   );
 }
 

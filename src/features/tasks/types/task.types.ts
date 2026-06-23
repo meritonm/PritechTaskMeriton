@@ -22,6 +22,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate: string | null;
+  reminderEnabled: boolean;
+  reminderTime: string | null;
   tags: TaskTag[];
   createdAt: string;
   history: TaskHistoryEntry[];

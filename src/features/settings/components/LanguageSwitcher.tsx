@@ -9,10 +9,14 @@ const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   sq: 'SQ',
 };
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  compact?: boolean;
+}
+
+export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
   const language = useSettingsStore((state) => state.language);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
-  const styles = useThemedStyles(createStyles);
+  const styles = useThemedStyles((c) => createStyles(c, compact));
 
   return (
     <View style={styles.container}>
@@ -36,20 +40,20 @@ export function LanguageSwitcher() {
   );
 }
 
-const createStyles = (c: ThemeColors) =>
+const createStyles = (c: ThemeColors, compact: boolean) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
       backgroundColor: c.surfaceMuted,
       borderRadius: radius.pill,
-      padding: 3,
-      gap: 2,
+      padding: compact ? 2 : 3,
+      gap: compact ? 1 : 2,
     },
     segment: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 6,
+      paddingHorizontal: compact ? spacing.sm : spacing.md,
+      paddingVertical: compact ? 4 : 6,
       borderRadius: radius.pill,
-      minWidth: 40,
+      minWidth: compact ? 32 : 40,
       alignItems: 'center',
     },
     segmentSelected: {
@@ -57,6 +61,7 @@ const createStyles = (c: ThemeColors) =>
     },
     label: {
       ...typography.caption,
+      fontSize: compact ? 11 : 13,
       fontWeight: '700',
       color: c.textMuted,
       letterSpacing: 0.5,

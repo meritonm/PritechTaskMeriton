@@ -3,7 +3,13 @@ export const en = {
     appName: 'Task Manager',
     retry: 'Try again',
     cancel: 'Cancel',
+    done: 'Done',
     delete: 'Delete',
+    continue: 'Continue',
+  },
+  splash: {
+    title: 'Task Manager',
+    tagline: 'Stay on top of your day',
   },
   headers: {
     tasks: 'Tasks',
@@ -13,6 +19,7 @@ export const en = {
   },
   list: {
     title: 'Task Manager',
+    titleShort: 'Tasks',
     subtitle_one: '{{count}} task total',
     subtitle_other: '{{count}} tasks total',
     searchPlaceholder: 'Search tasks...',
@@ -55,6 +62,8 @@ export const en = {
     descriptionPlaceholder: 'Add more details...',
     dueDateLabel: 'Due Date',
     dueDatePlaceholder: 'Select due date (optional)',
+    reminderLabel: 'Reminder',
+    reminderTimeLabel: 'Remind me at',
     createSubmit: 'Create Task',
     saveSubmit: 'Save Changes',
   },
@@ -72,7 +81,17 @@ export const en = {
     deleteTask: 'Delete Task',
     notFoundTitle: 'Task not found',
     notFoundMessage: 'This task may have been deleted.',
-    historyLabel: 'Activity',
+    historyLabel: 'History',
+    reminderLabel: 'Reminder',
+    reminderStatus: 'Reminder',
+    reminderOn: 'On',
+    reminderOff: 'Off',
+    reminderAt: 'Time',
+    reminderNeedsDueDate: 'Add a due date to use reminders.',
+    reminderScheduled: 'You will be notified about {{title}} on {{date}} at {{time}}.',
+    reminderPast: 'Reminder time has passed — edit the due date or time.',
+    addDueDate: 'Add due date',
+    editReminder: 'Edit reminder',
   },
   history: {
     created: 'Task created',
@@ -99,6 +118,8 @@ export const en = {
     titleRequired: 'Title is required',
     titleMax: 'Title must be 80 characters or less',
     descriptionMax: 'Description must be 300 characters or less',
+    reminderNeedsDueDate: 'Set a due date to enable reminders',
+    reminderTimeInvalid: 'Pick a valid reminder time',
   },
   errors: {
     genericTitle: 'Something went wrong',
@@ -109,8 +130,31 @@ export const en = {
     english: 'English',
     albanian: 'Shqip',
   },
+  toast: {
+    taskCreated: 'Task "{{title}}" created',
+    taskDeleted: '"{{title}}" deleted',
+    statusUpdated: '"{{title}}" → {{status}}',
+  },
+  quickActions: {
+    statusTitle: 'Change status',
+    edit: 'Edit task',
+    delete: 'Delete task',
+    reorder: 'Drag to reorder',
+  },
   notifications: {
-    reminderBody: 'This task is due today.',
+    launchTitle: 'Task reminders',
+    launchMessage: 'Would you like reminders when tasks are due?',
+    allow: 'Allow',
+    notNow: 'Not now',
+    reminderBody: '{{title}} is due — time to get it done.',
+    pastTitle: 'Reminder time has passed',
+    pastMessage: 'Pick a due date and time in the future to schedule a reminder.',
+    permissionTitle: 'Notifications',
+    permissionMessage:
+      'Tap Allow on the next screen so this app can remind you on the due date.',
+    permissionDeniedSettings:
+      'Notifications are blocked. Open Settings → Notifications → Expo Go (or this app) and enable alerts.',
+    openSettings: 'Open Settings',
   },
 };
 

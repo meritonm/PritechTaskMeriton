@@ -15,6 +15,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     status: 'pending',
     priority: 'medium',
     dueDate: null,
+    reminderEnabled: false,
+    reminderTime: null,
     tags: [],
     createdAt: new Date().toISOString(),
     history: [],

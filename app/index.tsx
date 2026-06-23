@@ -1,15 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  LayoutAnimation,
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
-  UIManager,
   View,
 } from 'react-native';
 import DraggableFlatList, {
@@ -19,6 +17,7 @@ import DraggableFlatList, {
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
+import { TaskListHeader } from '@/features/tasks/components/TaskListHeader';
 import { ImportSampleButton } from '@/features/tasks/components/ImportSampleButton';
 import { TaskCard } from '@/features/tasks/components/TaskCard';
 import { TaskCardSkeleton } from '@/features/tasks/components/TaskCardSkeleton';
@@ -26,17 +25,22 @@ import { TaskFilters } from '@/features/tasks/components/TaskFilters';
 import { TaskProgress } from '@/features/tasks/components/TaskProgress';
 import { TaskSearchBar } from '@/features/tasks/components/TaskSearchBar';
 import { useImportSampleTasks } from '@/features/tasks/hooks/useImportSampleTasks';
+import { useRefreshList } from '@/features/tasks/hooks/useRefreshList';
 import { getFilteredTasks, useTaskStore } from '@/features/tasks/store/taskStore';
 import { Task } from '@/features/tasks/types/task.types';
-import { LanguageSwitcher } from '@/features/settings/components/LanguageSwitcher';
-import { ThemeSwitcher } from '@/features/settings/components/ThemeSwitcher';
-import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { shadows, spacing, ThemeColors, useColors, useThemedStyles } from '@/theme';
 
 const SKELETON_KEYS = ['s1', 's2', 's3', 's4'];
+
+function ListSeparator() {
+  return <View style={separatorStyles.gap} />;
+}
+
+const separatorStyles = StyleSheet.create({
+  gap: {
+    height: spacing.md,
+  },
+});
 
 export default function TaskListScreen() {
   const router = useRouter();
@@ -48,17 +52,9 @@ export default function TaskListScreen() {
   const statusFilter = useTaskStore((state) => state.statusFilter);
   const setTasks = useTaskStore((state) => state.setTasks);
   const filteredTasks = getFilteredTasks({ tasks, searchQuery, statusFilter });
-  const { runImport, isImporting } = useImportSampleTasks();
+  const { isImporting } = useImportSampleTasks();
+  const { refreshing, onRefresh } = useRefreshList();
   const canReorder = statusFilter === 'all' && searchQuery.trim() === '';
-
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (mountedRef.current) {
-      LayoutAnimation.configureNext(LayoutAnimation.create(240, 'easeInEaseOut', 'opacity'));
-    } else {
-      mountedRef.current = true;
-    }
-  }, [tasks]);
 
   const hasTasks = tasks.length > 0;
   const hasFilteredTasks = filteredTasks.length > 0;
@@ -70,42 +66,19 @@ export default function TaskListScreen() {
     </ScaleDecorator>
   );
 
-  return (
-    <Screen>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.brand}>
-            <View style={styles.logo}>
-              <Ionicons name="checkmark-done" size={20} color="#FFFFFF" />
-            </View>
-            <Text style={styles.title}>{t('list.title')}</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <ThemeSwitcher />
-            <LanguageSwitcher />
-          </View>
-        </View>
-        <View style={styles.headerBottom}>
-          <Text style={styles.subtitle}>{t('list.subtitle', { count: tasks.length })}</Text>
-          {hasTasks ? <ImportSampleButton compact /> : null}
-        </View>
-      </View>
-
-      {hasTasks ? (
-        <>
-          <TaskProgress />
-          <TaskSearchBar />
-          <TaskFilters />
-        </>
-      ) : null}
-
-      {showSkeleton ? (
+  const renderBody = () => {
+    if (showSkeleton) {
+      return (
         <View style={styles.skeletonList}>
           {SKELETON_KEYS.map((key) => (
             <TaskCardSkeleton key={key} />
           ))}
         </View>
-      ) : !hasTasks ? (
+      );
+    }
+
+    if (!hasTasks) {
+      return (
         <View style={styles.emptyWrap}>
           <EmptyState
             title={t('list.emptyTitle')}
@@ -117,89 +90,97 @@ export default function TaskListScreen() {
             <ImportSampleButton />
           </View>
         </View>
-      ) : !hasFilteredTasks ? (
+      );
+    }
+
+    if (!hasFilteredTasks) {
+      return (
         <View style={styles.emptyWrap}>
           <EmptyState title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
         </View>
-      ) : (
-        <DraggableFlatList
-          data={filteredTasks}
-          keyExtractor={(item) => item.id}
-          renderItem={renderDraggableItem}
-          onDragEnd={({ data }) => setTasks(data)}
-          activationDistance={canReorder ? 12 : 10000}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isImporting}
-              onRefresh={runImport}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
-            />
-          }
-        />
-      )}
+      );
+    }
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/task/create')}
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+    return (
+      <DraggableFlatList
+        data={filteredTasks}
+        keyExtractor={(item) => item.id}
+        renderItem={renderDraggableItem}
+        onDragEnd={({ data }) => setTasks(data)}
+        activationDistance={canReorder ? 12 : 10000}
+        containerStyle={styles.listFill}
+        style={styles.listFill}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={ListSeparator}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        onScrollBeginDrag={Keyboard.dismiss}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      />
+    );
+  };
+
+  return (
+    <Screen>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
       >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </Pressable>
+        <View style={styles.flex}>
+          <TaskListHeader taskCount={tasks.length} showImport={hasTasks} />
+
+          {hasTasks ? (
+            <View style={styles.listControls}>
+              <TaskProgress />
+              <TaskSearchBar />
+              <TaskFilters />
+            </View>
+          ) : null}
+
+          <View style={styles.listContainer}>
+            {renderBody()}
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/task/create')}
+            style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+          >
+            <Ionicons name="add" size={28} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    header: {
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.lg,
-      gap: spacing.xs,
-    },
-    headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    brand: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
+    flex: {
       flex: 1,
     },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    logo: {
-      width: 36,
-      height: 36,
-      borderRadius: radius.md,
-      backgroundColor: c.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...shadows.sm,
-    },
-    title: {
-      ...typography.title,
-      color: c.text,
-    },
-    headerBottom: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: spacing.xs,
-    },
-    subtitle: {
-      ...typography.caption,
-      color: c.textMuted,
-    },
-    list: {
+    listControls: {
       gap: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    listContainer: {
+      flex: 1,
+      minHeight: 0,
+      position: 'relative',
+    },
+    listFill: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    listContent: {
       paddingTop: spacing.xs,
       paddingBottom: 96,
     },

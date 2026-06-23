@@ -1,17 +1,19 @@
-import { format, parseISO } from 'date-fns';
-import { useEffect, useMemo, useRef } from 'react';
-import { Alert, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { format, parseISO } from 'date-fns';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/Badge';
-import { Task } from '@/features/tasks/types/task.types';
+import { TaskQuickActionsSheet } from '@/features/tasks/components/TaskQuickActionsSheet';
+import { Task, TaskDisplayStatus } from '@/features/tasks/types/task.types';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { haptics } from '@/lib/haptics';
 import { cancelTaskReminder, rescheduleTaskReminder } from '@/lib/notifications';
+import { useToastStore } from '@/lib/toastStore';
 import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 interface TaskCardProps {
@@ -25,9 +27,12 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
   const { t } = useTranslation();
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
+  const showToast = useToastStore((state) => state.show);
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
+  const setTaskDisplayStatus = useTaskStore((state) => state.setTaskDisplayStatus);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const swipeableRef = useRef<Swipeable>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const enter = useMemo(() => new Animated.Value(0), []);
   useEffect(() => {
@@ -52,9 +57,19 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
     }
   };
 
-  const confirmDelete = () => {
+  const handleStatusSelect = (status: TaskDisplayStatus) => {
+    haptics.light();
+    setTaskDisplayStatus(task.id, status);
+    const updated = useTaskStore.getState().tasks.find((item) => item.id === task.id);
+    if (updated) {
+      void rescheduleTaskReminder(updated);
+    }
+    showToast(t('toast.statusUpdated', { title: task.title, status: t(`status.${status}`) }));
+  };
+
+  const handleDelete = () => {
     Alert.alert(t('alerts.deleteTitle'), t('alerts.deleteMessage', { title: task.title }), [
-      { text: t('common.cancel'), style: 'cancel', onPress: () => swipeableRef.current?.close() },
+      { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('common.delete'),
         style: 'destructive',
@@ -62,9 +77,15 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
           haptics.warning();
           void cancelTaskReminder(task.id);
           deleteTask(task.id);
+          showToast(t('toast.taskDeleted', { title: task.title }), 'info');
         },
       },
     ]);
+  };
+
+  const confirmDelete = () => {
+    swipeableRef.current?.close();
+    handleDelete();
   };
 
   const renderRightActions = (
@@ -87,92 +108,125 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
   };
 
   return (
-    <Animated.View
-      style={{
-        opacity: enter,
-        transform: [
-          {
-            translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }),
-          },
-        ],
-      }}
-    >
-      <Swipeable
-        ref={swipeableRef}
-        renderRightActions={renderRightActions}
-        overshootRight={false}
-        rightThreshold={40}
-        containerStyle={styles.swipeContainer}
+    <>
+      <Animated.View
+        style={{
+          opacity: enter,
+          transform: [
+            {
+              translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }),
+            },
+          ],
+        }}
       >
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push(`/task/${task.id}`)}
-          onLongPress={onDrag}
-          delayLongPress={220}
-          style={({ pressed }) => [
-            styles.card,
-            pressed && styles.cardPressed,
-            dragging && styles.cardDragging,
-          ]}
+        <Swipeable
+          ref={swipeableRef}
+          renderRightActions={renderRightActions}
+          overshootRight={false}
+          rightThreshold={40}
+          containerStyle={styles.swipeContainer}
         >
-          <View style={[styles.accent, { backgroundColor: priorityColor }]} />
-
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: isCompleted }}
-            hitSlop={8}
-            onPress={handleToggle}
-            style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
+          <View
+            style={[styles.card, dragging && styles.cardDragging]}
           >
-            {isCompleted ? <Ionicons name="checkmark" size={15} color="#FFFFFF" /> : null}
-          </Pressable>
+            <View style={[styles.accent, { backgroundColor: priorityColor }]} />
 
-          <View style={styles.content}>
-            <View style={styles.headerRow}>
-              <Text style={[styles.title, isCompleted && styles.titleCompleted]} numberOfLines={2}>
-                {task.title}
-              </Text>
-              <Badge label={t(`status.${displayStatus}`)} tone={getStatusTone(displayStatus)} />
-            </View>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: isCompleted }}
+              hitSlop={8}
+              onPress={handleToggle}
+              style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
+            >
+              {isCompleted ? <Ionicons name="checkmark" size={15} color="#FFFFFF" /> : null}
+            </Pressable>
 
-            {task.description ? (
-              <Text style={styles.description} numberOfLines={1}>
-                {task.description}
-              </Text>
-            ) : null}
-
-            <View style={styles.metaRow}>
-              <View style={[styles.priorityPill, { backgroundColor: `${priorityColor}22` }]}>
-                <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
-                <Text style={[styles.priorityText, { color: priorityColor }]}>
-                  {t(`priority.${task.priority}`)}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push(`/task/${task.id}`)}
+              onLongPress={() => {
+                haptics.light();
+                setActionsOpen(true);
+              }}
+              delayLongPress={280}
+              style={({ pressed }) => [styles.contentPressable, pressed && styles.cardPressed]}
+            >
+              <View style={styles.content}>
+              <View style={styles.headerRow}>
+                <Text style={[styles.title, isCompleted && styles.titleCompleted]} numberOfLines={2}>
+                  {task.title}
                 </Text>
+                <Badge label={t(`status.${displayStatus}`)} tone={getStatusTone(displayStatus)} />
               </View>
 
-              {task.dueDate ? (
-                <View style={styles.metaItem}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={13}
-                    color={isOverdue ? colors.danger : colors.textMuted}
-                  />
-                  <Text style={[styles.metaText, isOverdue && styles.metaTextOverdue]}>
-                    {format(parseISO(task.dueDate), 'MMM d')}
-                  </Text>
-                </View>
+              {task.description ? (
+                <Text style={styles.description} numberOfLines={1}>
+                  {task.description}
+                </Text>
               ) : null}
 
-              {task.tags.map((tag) => (
-                <View key={tag} style={styles.metaItem}>
-                  <View style={[styles.tagDot, { backgroundColor: colors.tag[tag] }]} />
-                  <Text style={styles.metaText}>{t(`tags.${tag}`)}</Text>
+              <View style={styles.metaRow}>
+                <View style={[styles.priorityPill, { backgroundColor: `${priorityColor}22` }]}>
+                  <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} />
+                  <Text style={[styles.priorityText, { color: priorityColor }]}>
+                    {t(`priority.${task.priority}`)}
+                  </Text>
                 </View>
-              ))}
-            </View>
+
+                {task.dueDate ? (
+                  <View style={styles.metaItem}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={13}
+                      color={isOverdue ? colors.danger : colors.textMuted}
+                    />
+                    <Text style={[styles.metaText, isOverdue && styles.metaTextOverdue]}>
+                      {format(parseISO(task.dueDate), 'MMM d')}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {task.tags.map((tag) => (
+                  <View key={tag} style={styles.metaItem}>
+                    <View style={[styles.tagDot, { backgroundColor: colors.tag[tag] }]} />
+                    <Text style={styles.metaText}>{t(`tags.${tag}`)}</Text>
+                  </View>
+                ))}
+              </View>
+              </View>
+            </Pressable>
+
+            {onDrag ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('quickActions.reorder')}
+                onLongPress={onDrag}
+                delayLongPress={180}
+                hitSlop={8}
+                style={styles.dragHandle}
+              >
+                <Ionicons name="reorder-three" size={22} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
           </View>
-        </Pressable>
-      </Swipeable>
-    </Animated.View>
+        </Swipeable>
+      </Animated.View>
+
+      <TaskQuickActionsSheet
+        task={task}
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        onSelectStatus={handleStatusSelect}
+        onEdit={() => {
+          setActionsOpen(false);
+          router.push(`/task/edit/${task.id}`);
+        }}
+        onDelete={() => {
+          setActionsOpen(false);
+          handleDelete();
+        }}
+      />
+    </>
   );
 }
 
@@ -210,11 +264,14 @@ const createStyles = (c: ThemeColors) =>
       ...shadows.sm,
     },
     cardPressed: {
-      backgroundColor: c.surfaceMuted,
+      opacity: 0.85,
     },
     cardDragging: {
       borderColor: c.primary,
       ...shadows.lg,
+    },
+    contentPressable: {
+      flex: 1,
     },
     accent: {
       position: 'absolute',
@@ -304,5 +361,10 @@ const createStyles = (c: ThemeColors) =>
       width: 6,
       height: 6,
       borderRadius: 3,
+    },
+    dragHandle: {
+      paddingLeft: spacing.xs,
+      paddingTop: 2,
+      justifyContent: 'center',
     },
   });

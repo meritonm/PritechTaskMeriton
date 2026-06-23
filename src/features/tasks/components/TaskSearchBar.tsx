@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTaskFilters } from '@/features/tasks/hooks/useTaskFilters';
@@ -17,12 +17,17 @@ export function TaskSearchBar() {
     <View style={[styles.container, focused && styles.containerFocused]}>
       <Ionicons name="search" size={18} color={focused ? colors.primary : colors.textSubtle} />
       <TextInput
+        autoCorrect={false}
+        spellCheck={false}
+        autoCapitalize="none"
         placeholder={t('list.searchPlaceholder')}
         placeholderTextColor={colors.textSubtle}
         value={searchQuery}
         onChangeText={setSearchQuery}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        onSubmitEditing={Keyboard.dismiss}
+        blurOnSubmit
         style={styles.input}
         clearButtonMode="while-editing"
         returnKeyType="search"

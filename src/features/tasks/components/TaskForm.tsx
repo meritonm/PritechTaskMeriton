@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { DatePickerField } from '@/components/ui/DatePickerField';
+import { KeyboardAwareScrollView } from '@/components/ui/KeyboardAwareScrollView';
 import { TextField } from '@/components/ui/TextField';
 import { PriorityPicker } from '@/features/tasks/components/PriorityPicker';
 import { TagPicker } from '@/features/tasks/components/TagPicker';
+import { TaskReminderField } from '@/features/tasks/components/TaskReminderField';
 import { TaskFormValues, taskFormSchema } from '@/features/tasks/schemas/task.schema';
 import { spacing } from '@/theme';
 
@@ -30,6 +32,8 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
       description: '',
       priority: 'medium',
       dueDate: null,
+      reminderEnabled: false,
+      reminderTime: null,
       tags: [],
       ...defaultValues,
     },
@@ -38,7 +42,7 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
   const translateError = (message?: string) => (message ? t(message) : undefined);
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       <Controller
         control={control}
         name="title"
@@ -49,6 +53,7 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
+            returnKeyType="next"
             error={translateError(errors.title?.message)}
           />
         )}
@@ -67,6 +72,8 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
             multiline
             numberOfLines={4}
             style={styles.textArea}
+            returnKeyType="default"
+            blurOnSubmit
             error={translateError(errors.description?.message)}
           />
         )}
@@ -90,6 +97,33 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
 
       <Controller
         control={control}
+        name="reminderEnabled"
+        render={({ field: { onChange: onEnabledChange, value: enabled } }) => (
+          <Controller
+            control={control}
+            name="reminderTime"
+            render={({ field: { onChange: onTimeChange, value: time } }) => (
+              <Controller
+                control={control}
+                name="dueDate"
+                render={({ field: { onChange: onDueDateChange, value: dueDate } }) => (
+                  <TaskReminderField
+                    enabled={enabled}
+                    time={time}
+                    dueDate={dueDate}
+                    onEnabledChange={onEnabledChange}
+                    onTimeChange={onTimeChange}
+                    onDueDateChange={onDueDateChange}
+                  />
+                )}
+              />
+            )}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
         name="tags"
         render={({ field: { onChange, value } }) => <TagPicker value={value} onChange={onChange} />}
       />
@@ -102,14 +136,13 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
           loading={isSubmitting}
         />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
-    paddingBottom: spacing.xxl,
   },
   textArea: {
     minHeight: 110,

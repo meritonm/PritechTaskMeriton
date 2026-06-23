@@ -5,10 +5,20 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "pritechtask",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F8FAFC",
+      "dark": {
+        "backgroundColor": "#0B1120"
+      }
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Pritech Task Manager schedules local reminders when a task is due. No push server or fitness data is used."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +27,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,7 +41,24 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "task-reminders",
+          "color": "#2563EB",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F8FAFC",
+          "dark": {
+            "backgroundColor": "#0B1120"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
