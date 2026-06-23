@@ -56,7 +56,7 @@ export const useTaskStore = create<TaskStore>()(
       searchQuery: '',
       statusFilter: 'all',
       sortBy: 'manual',
-      groupByDate: true,
+      groupByDate: false,
 
       addTask: (input) => {
         const task: Task = {
@@ -226,15 +226,28 @@ export const useTaskStore = create<TaskStore>()(
 
       setSearchQuery: (query) => set({ searchQuery: query }),
       setStatusFilter: (filter) => set({ statusFilter: filter }),
-      setSortBy: (sortBy) => set({ sortBy }),
-      setGroupByDate: (groupByDate) => set({ groupByDate }),
+      setSortBy: (sortBy) =>
+        set((state) => ({
+          sortBy,
+          ...(sortBy === 'manual' ? { groupByDate: false } : {}),
+        })),
+      setGroupByDate: (groupByDate) =>
+        set((state) => ({
+          groupByDate,
+          ...(groupByDate && state.sortBy === 'manual' ? { sortBy: 'dueDate' as const } : {}),
+        })),
     }),
     {
       name: 'tasks-storage',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => AsyncStorage),
-      migrate: (persisted) => {
-        const state = persisted as { tasks?: Task[] } | undefined;
+      migrate: (persisted, version) => {
+        const state = persisted as {
+          tasks?: Task[];
+          sortBy?: TaskSortBy;
+          groupByDate?: boolean;
+        };
+
         if (state?.tasks) {
           state.tasks = state.tasks.map((task) => ({
             ...task,
@@ -243,6 +256,11 @@ export const useTaskStore = create<TaskStore>()(
             reminderTime: task.reminderTime ?? null,
           }));
         }
+
+        if (version < 3 && state.sortBy === 'manual' && state.groupByDate) {
+          state.groupByDate = false;
+        }
+
         return state as never;
       },
       onRehydrateStorage: () => (_state, error) => {

@@ -23,7 +23,7 @@ const resetStore = () =>
     searchQuery: '',
     statusFilter: 'all',
     sortBy: 'manual',
-    groupByDate: true,
+    groupByDate: false,
   });
 
 describe('taskStore', () => {

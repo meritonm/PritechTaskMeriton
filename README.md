@@ -238,8 +238,52 @@ npm test
 
 ## Screenshots
 
-> Add screenshots or a short screen recording here.
+| Task list | New task | Task detail |
+| :---: | :---: | :---: |
+| ![Task list](./docs/screenshots/01-task-list.png) | ![New task](./docs/screenshots/02-new-task.png) | ![Task detail](./docs/screenshots/03-task-detail.png) |
 
-| Task list | New task | Settings |
-| --------- | -------- | -------- |
-| _add image_ | _add image_ | _add image_ |
+| Edit task | Settings | More filters |
+| :---: | :---: | :---: |
+| ![Edit task](./docs/screenshots/04-edit-task.png) | ![Settings](./docs/screenshots/05-settings.png) | ![More filters](./docs/screenshots/08-more-filters-expanded.png) |
+
+| Swipe delete | Date picker | Quick actions |
+| :---: | :---: | :---: |
+| ![Swipe delete](./docs/screenshots/06-swipe-delete.png) | ![Date picker](./docs/screenshots/07-date-picker.png) | ![Quick actions](./docs/screenshots/09-quick-actions.png) |
+
+| Empty state |
+| :---: |
+| ![Empty state](./docs/screenshots/10-empty-state.png) |
+
+### How to update screenshots
+
+1. Run the app in **iOS Simulator** (`npm run ios`) with the dev server on `127.0.0.1:8081`.
+2. Seed sample tasks (or clear for empty state):
+
+```bash
+node scripts/seed-simulator-tasks.mjs          # 12 sample tasks
+node scripts/seed-simulator-tasks.mjs --empty  # empty list
+```
+
+3. Reload the app, then open routes / query params for specific UI states:
+
+| Screenshot | Route / deep link |
+| ---------- | ----------------- |
+| `01-task-list.png` | `/` |
+| `02-new-task.png` | `/task/create` |
+| `03-task-detail.png` | `/task/{id}` |
+| `04-edit-task.png` | `/task/edit/{id}` |
+| `05-settings.png` | `/settings` |
+| `06-swipe-delete.png` | `/?swipeDemo=1` |
+| `07-date-picker.png` | `/task/create?openDatePicker=1` |
+| `08-more-filters-expanded.png` | `/?expandFilters=1` |
+| `09-quick-actions.png` | Long-press a task card |
+| `10-empty-state.png` | `/` after `--empty` seed |
+
+4. Capture with **iOS Simulator** (`Cmd + S`) or:
+
+```bash
+xcrun simctl io booted screenshot docs/screenshots/01-task-list.png
+```
+
+Use **relative paths** (`./docs/screenshots/...`) so images work on GitHub. Commit PNG files together with README changes.
+
