@@ -1,6 +1,6 @@
 # Task Manager — PRITECH React Native Technical Task
 
-A clean, real-world task manager built with **React Native (Expo SDK 56)** and **TypeScript**. It lets a user create, view, complete, and delete personal tasks, with search, filtering, local persistence, and sample data fetched from a public API.
+A clean, real-world task manager built with **React Native (Expo SDK 54)** and **TypeScript**. It lets a user create, view, complete, and delete personal tasks, with search, filtering, local persistence, and sample data fetched from a public API.
 
 > Built for the PRITECH React Native technical task. The focus is clean architecture, reusable components, clear UI, and solid logic — without unnecessary complexity.
 
@@ -50,7 +50,7 @@ A clean, real-world task manager built with **React Native (Expo SDK 56)** and *
 
 | Concern            | Choice                                         |
 | ------------------ | ---------------------------------------------- |
-| Framework          | Expo SDK 56, React Native 0.85, React 19       |
+| Framework          | Expo SDK 54, React Native 0.81, React 19       |
 | Language           | TypeScript (strict mode)                       |
 | Navigation         | Expo Router (file-based)                       |
 | Local state        | Zustand + AsyncStorage (persisted)             |
@@ -71,15 +71,27 @@ A clean, real-world task manager built with **React Native (Expo SDK 56)** and *
 ### Prerequisites
 
 - Node.js 18+ and npm
-- [Expo Go](https://expo.dev/go) on a physical device, or an iOS Simulator / Android Emulator
+- [Expo Go](https://expo.dev/go) on a physical device (recommended for quick testing), or an iOS Simulator / Android Emulator
+
+### Testing on a physical device (Expo Go)
+
+This project targets **Expo SDK 54** so it can be opened on a real phone with **Expo Go** via QR scan.
+
+The app was originally scaffolded on **Expo SDK 56**, but the public **Expo Go** app on iPhone/Android does not yet support SDK 56. For that reason the project was **downgraded to SDK 54** — a deliberate trade-off so reviewers and testers can run the app on a device without a development build.
+
+**Steps:**
+
+1. Install or update **Expo Go** from the App Store / Play Store (it must support **SDK 54**).
+2. Make sure your phone and computer are on the **same Wi‑Fi**.
+3. Run `npm start` and scan the QR code with the Camera app (iOS) or Expo Go (Android).
+
+If you still see *"Project is incompatible with this version of Expo Go"*, update Expo Go to the latest version. If your Expo Go build is older than SDK 54, use a simulator/emulator or a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
 
 ### Install
 
 ```bash
-npm install --legacy-peer-deps
+npm install
 ```
-
-> `--legacy-peer-deps` is used because of strict React 19 peer ranges in some transitive dependencies.
 
 ### Run
 
@@ -193,4 +205,5 @@ npm test
 - **Zustand vs Redux** — Zustand keeps local state simple and ergonomic for a small app, with built-in persistence middleware.
 - **TanStack Query** — used for the API import to demonstrate proper server-state handling (loading/error/refetch).
 - **Derived status** — overdue is computed, not stored, so it's always correct without background jobs.
+- **Expo SDK 54 vs 56** — SDK 56 is the latest scaffold, but Expo Go on devices lags behind new SDK releases. SDK 54 was chosen so the app opens with a simple QR scan during demos and PRITECH review. All features (dark mode, drag-to-reorder, i18n, etc.) work the same; only the underlying Expo/RN versions differ.
 - **i18n** — all user-facing strings (including validation messages) are translated; language auto-detects from the device and can be switched in-app.
