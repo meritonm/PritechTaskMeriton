@@ -18,7 +18,13 @@ const formTask = (overrides: Partial<TaskFormValues> = {}): TaskFormValues => ({
 const isoDate = (date: Date) => formatISO(date, { representation: 'date' });
 
 const resetStore = () =>
-  useTaskStore.setState({ tasks: [], searchQuery: '', statusFilter: 'all' });
+  useTaskStore.setState({
+    tasks: [],
+    searchQuery: '',
+    statusFilter: 'all',
+    sortBy: 'manual',
+    groupByDate: true,
+  });
 
 describe('taskStore', () => {
   beforeEach(() => {
@@ -65,6 +71,37 @@ describe('taskStore', () => {
 
     useTaskStore.getState().deleteTask(id);
     expect(useTaskStore.getState().tasks).toHaveLength(0);
+  });
+
+  it('restores a deleted task', () => {
+    useTaskStore.getState().addTask(formTask({ title: 'Restore me' }));
+    const task = useTaskStore.getState().tasks[0];
+    useTaskStore.getState().deleteTask(task.id);
+    expect(useTaskStore.getState().tasks).toHaveLength(0);
+
+    useTaskStore.getState().restoreTask(task);
+    expect(useTaskStore.getState().tasks).toHaveLength(1);
+    expect(useTaskStore.getState().tasks[0].title).toBe('Restore me');
+  });
+
+  it('setTaskDisplayStatus marks completed', () => {
+    useTaskStore.getState().addTask(formTask({ title: 'Status' }));
+    const id = useTaskStore.getState().tasks[0].id;
+
+    useTaskStore.getState().setTaskDisplayStatus(id, 'completed');
+    expect(useTaskStore.getState().tasks[0].status).toBe('completed');
+  });
+
+  it('setTaskDisplayStatus sets overdue by moving due date to yesterday', () => {
+    useTaskStore.getState().addTask(
+      formTask({ title: 'Future', dueDate: isoDate(addDays(new Date(), 3)) }),
+    );
+    const id = useTaskStore.getState().tasks[0].id;
+
+    useTaskStore.getState().setTaskDisplayStatus(id, 'overdue');
+    const task = useTaskStore.getState().tasks[0];
+    expect(task.status).toBe('pending');
+    expect(task.dueDate).toBe(isoDate(subDays(new Date(), 1)));
   });
 
   it('updates editable fields without touching status', () => {

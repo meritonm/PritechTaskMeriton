@@ -1,13 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Animated,
   Keyboard,
   KeyboardAvoidingView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   Pressable,
   RefreshControl,
+  SectionList,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import DraggableFlatList, {
@@ -22,13 +28,15 @@ import { ImportSampleButton } from '@/features/tasks/components/ImportSampleButt
 import { TaskCard } from '@/features/tasks/components/TaskCard';
 import { TaskCardSkeleton } from '@/features/tasks/components/TaskCardSkeleton';
 import { TaskFilters } from '@/features/tasks/components/TaskFilters';
+import { TaskListSortBar } from '@/features/tasks/components/TaskListSortBar';
 import { TaskProgress } from '@/features/tasks/components/TaskProgress';
 import { TaskSearchBar } from '@/features/tasks/components/TaskSearchBar';
 import { useImportSampleTasks } from '@/features/tasks/hooks/useImportSampleTasks';
 import { useRefreshList } from '@/features/tasks/hooks/useRefreshList';
 import { getFilteredTasks, useTaskStore } from '@/features/tasks/store/taskStore';
 import { Task } from '@/features/tasks/types/task.types';
-import { shadows, spacing, ThemeColors, useColors, useThemedStyles } from '@/theme';
+import { groupTasksByDate, sortTasks, TaskSection } from '@/features/tasks/utils/taskListUtils';
+import { shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 const SKELETON_KEYS = ['s1', 's2', 's3', 's4'];
 
@@ -50,21 +58,92 @@ export default function TaskListScreen() {
   const tasks = useTaskStore((state) => state.tasks);
   const searchQuery = useTaskStore((state) => state.searchQuery);
   const statusFilter = useTaskStore((state) => state.statusFilter);
+  const sortBy = useTaskStore((state) => state.sortBy);
+  const groupByDate = useTaskStore((state) => state.groupByDate);
   const setTasks = useTaskStore((state) => state.setTasks);
+  const setSearchQuery = useTaskStore((state) => state.setSearchQuery);
+  const setStatusFilter = useTaskStore((state) => state.setStatusFilter);
   const filteredTasks = getFilteredTasks({ tasks, searchQuery, statusFilter });
+  const sortedTasks = useMemo(() => sortTasks(filteredTasks, sortBy), [filteredTasks, sortBy]);
+  const sections = useMemo(
+    () =>
+      groupByDate
+        ? groupTasksByDate(sortedTasks, t)
+        : [{ key: 'all', title: '', data: sortedTasks }],
+    [groupByDate, sortedTasks, t],
+  );
   const { isImporting } = useImportSampleTasks();
   const { refreshing, onRefresh } = useRefreshList();
-  const canReorder = statusFilter === 'all' && searchQuery.trim() === '';
+  const canReorder =
+    sortBy === 'manual' && !groupByDate && statusFilter === 'all' && searchQuery.trim() === '';
+
+  const fabOpacity = useRef(new Animated.Value(1)).current;
+  const fabTranslateY = useRef(new Animated.Value(0)).current;
+  const fabVisible = useRef(true);
+  const [fabInteractive, setFabInteractive] = useState(true);
 
   const hasTasks = tasks.length > 0;
   const hasFilteredTasks = filteredTasks.length > 0;
   const showSkeleton = isImporting && !hasTasks;
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const shouldShow = y < 48;
+    if (shouldShow === fabVisible.current) {
+      return;
+    }
+    fabVisible.current = shouldShow;
+    setFabInteractive(shouldShow);
+    Animated.parallel([
+      Animated.timing(fabOpacity, {
+        toValue: shouldShow ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fabTranslateY, {
+        toValue: shouldShow ? 0 : 24,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+  };
 
   const renderDraggableItem = ({ item, drag, isActive }: RenderItemParams<Task>) => (
     <ScaleDecorator>
       <TaskCard task={item} onDrag={canReorder ? drag : undefined} dragging={isActive} />
     </ScaleDecorator>
   );
+
+  const renderTaskItem = (item: Task) => <TaskCard task={item} />;
+
+  const renderSectionHeader = ({ section }: { section: TaskSection }) => {
+    if (!section.title) {
+      return null;
+    }
+    return <Text style={styles.sectionHeader}>{section.title}</Text>;
+  };
+
+  const listProps = {
+    showsVerticalScrollIndicator: false,
+    keyboardShouldPersistTaps: 'handled' as const,
+    keyboardDismissMode: Platform.OS === 'ios' ? ('interactive' as const) : ('on-drag' as const),
+    onScrollBeginDrag: Keyboard.dismiss,
+    onScroll: handleScroll,
+    scrollEventThrottle: 16,
+    refreshControl: (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        tintColor={colors.primary}
+        colors={[colors.primary]}
+      />
+    ),
+  };
 
   const renderBody = () => {
     if (showSkeleton) {
@@ -83,6 +162,7 @@ export default function TaskListScreen() {
           <EmptyState
             title={t('list.emptyTitle')}
             description={t('list.emptyDescription')}
+            hint={t('list.emptyHint')}
             actionLabel={t('list.emptyAction')}
             onAction={() => router.push('/task/create')}
           />
@@ -96,34 +176,46 @@ export default function TaskListScreen() {
     if (!hasFilteredTasks) {
       return (
         <View style={styles.emptyWrap}>
-          <EmptyState title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
+          <EmptyState
+            title={t('list.noMatchTitle')}
+            description={t('list.noMatchDescription')}
+            actionLabel={t('list.clearFilters')}
+            actionIcon="close-circle-outline"
+            onAction={clearFilters}
+          />
         </View>
       );
     }
 
+    if (canReorder) {
+      return (
+        <DraggableFlatList
+          data={sortedTasks}
+          keyExtractor={(item) => item.id}
+          renderItem={renderDraggableItem}
+          onDragEnd={({ data }) => setTasks(data)}
+          activationDistance={12}
+          containerStyle={styles.listFill}
+          style={styles.listFill}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={ListSeparator}
+          {...listProps}
+        />
+      );
+    }
+
     return (
-      <DraggableFlatList
-        data={filteredTasks}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={renderDraggableItem}
-        onDragEnd={({ data }) => setTasks(data)}
-        activationDistance={canReorder ? 12 : 10000}
-        containerStyle={styles.listFill}
-        style={styles.listFill}
-        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => renderTaskItem(item)}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
         ItemSeparatorComponent={ListSeparator}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-        onScrollBeginDrag={Keyboard.dismiss}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
+        SectionSeparatorComponent={ListSeparator}
+        contentContainerStyle={styles.listContent}
+        style={styles.listFill}
+        {...listProps}
       />
     );
   };
@@ -143,20 +235,27 @@ export default function TaskListScreen() {
               <TaskProgress />
               <TaskSearchBar />
               <TaskFilters />
+              <TaskListSortBar />
             </View>
           ) : null}
 
-          <View style={styles.listContainer}>
-            {renderBody()}
-          </View>
+          <View style={styles.listContainer}>{renderBody()}</View>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/task/create')}
-            style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+          <Animated.View
+            pointerEvents={fabInteractive ? 'auto' : 'none'}
+            style={[
+              styles.fabWrap,
+              { opacity: fabOpacity, transform: [{ translateY: fabTranslateY }] },
+            ]}
           >
-            <Ionicons name="add" size={28} color="#FFFFFF" />
-          </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/task/create')}
+              style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+            >
+              <Ionicons name="add" size={28} color="#FFFFFF" />
+            </Pressable>
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -184,6 +283,15 @@ const createStyles = (c: ThemeColors) =>
       paddingTop: spacing.xs,
       paddingBottom: 96,
     },
+    sectionHeader: {
+      ...typography.caption,
+      color: c.textMuted,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
+    },
     skeletonList: {
       gap: spacing.md,
       paddingTop: spacing.xs,
@@ -196,10 +304,12 @@ const createStyles = (c: ThemeColors) =>
       paddingHorizontal: spacing.xl,
       marginTop: spacing.md,
     },
-    fab: {
+    fabWrap: {
       position: 'absolute',
       right: spacing.lg,
       bottom: spacing.xl,
+    },
+    fab: {
       width: 60,
       height: 60,
       borderRadius: 30,

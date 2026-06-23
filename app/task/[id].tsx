@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Badge } from '@/components/ui/Badge';
@@ -10,10 +10,11 @@ import { ErrorView } from '@/components/ui/ErrorView';
 import { Screen } from '@/components/ui/Screen';
 import { TaskHistory } from '@/features/tasks/components/TaskHistory';
 import { TaskReminderPanel } from '@/features/tasks/components/TaskReminderPanel';
+import { useDeleteTaskWithUndo } from '@/features/tasks/hooks/useDeleteTaskWithUndo';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { haptics } from '@/lib/haptics';
-import { cancelTaskReminder, rescheduleTaskReminder } from '@/lib/notifications';
+import { rescheduleTaskReminder } from '@/lib/notifications';
 import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
 export default function TaskDetailScreen() {
@@ -24,7 +25,7 @@ export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = useTaskStore((state) => state.tasks.find((item) => item.id === id));
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
-  const deleteTask = useTaskStore((state) => state.deleteTask);
+  const { deleteWithUndo } = useDeleteTaskWithUndo();
 
   if (!task) {
     return (
@@ -42,19 +43,10 @@ export default function TaskDetailScreen() {
   const isHighPriority = task.priority === 'high';
 
   const handleDelete = () => {
-    Alert.alert(t('alerts.deleteTitle'), t('alerts.deleteMessage', { title: task.title }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => {
-          haptics.warning();
-          void cancelTaskReminder(task.id);
-          deleteTask(task.id);
-          router.back();
-        },
-      },
-    ]);
+    deleteWithUndo(task, {
+      confirm: true,
+      onDeleted: () => router.back(),
+    });
   };
 
   return (

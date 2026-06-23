@@ -1,9 +1,10 @@
 import { addDays, format, parse } from 'date-fns';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { AppSwitch } from '@/components/ui/AppSwitch';
 import { DateTimePickerModal } from '@/components/ui/DateTimePickerModal';
 import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
@@ -58,12 +59,10 @@ export function TaskReminderField({
     <View style={styles.container}>
       <View style={styles.row}>
         <Text style={styles.label}>{t('form.reminderLabel')}</Text>
-        <Switch
+        <AppSwitch
           accessibilityRole="switch"
           value={enabled}
           onValueChange={handleToggle}
-          trackColor={{ false: colors.border, true: colors.primaryLight }}
-          thumbColor={enabled ? colors.primary : colors.surface}
         />
       </View>
 

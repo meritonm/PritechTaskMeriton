@@ -1,8 +1,8 @@
 # Task Manager — PRITECH React Native Technical Task
 
-A clean, real-world task manager built with **React Native (Expo SDK 54)** and **TypeScript**. It lets a user create, view, complete, and delete personal tasks, with search, filtering, local persistence, and sample data fetched from a public API.
+A production-style task manager built with **React Native (Expo SDK 54)** and **TypeScript**. Users can create, view, complete, and delete tasks, with search, filtering, sorting, grouping, local persistence, optional due-date reminders, and sample data from a public API.
 
-> Built for the PRITECH React Native technical task. The focus is clean architecture, reusable components, clear UI, and solid logic — without unnecessary complexity.
+> Built for the PRITECH React Native technical task — clean architecture, reusable UI, clear UX, and solid logic without unnecessary complexity.
 
 ---
 
@@ -10,60 +10,86 @@ A clean, real-world task manager built with **React Native (Expo SDK 54)** and *
 
 ### Core requirements
 
-- **Task list screen** — all tasks with status, priority, due date, and tags at a glance.
-- **Add new task** — title, description, priority, due date, and optional tags.
-- **Mark completed / not completed** — tap the checkbox on a card or use the detail screen.
-- **Delete task** — swipe a card left, or delete from the detail screen (with confirmation).
-- **Task details view** — full information for a single task.
-- **Input validation** — powered by Zod + React Hook Form with inline error messages.
-- **Clean, simple UI** — consistent design tokens (colors, spacing, typography, radius, shadows).
-- **Public API integration** — imports sample tasks from the [DummyJSON Todos API](https://dummyjson.com/todos).
+| Feature | Implementation |
+| ------- | -------------- |
+| Task list | Status, priority, due date, and tags on each card |
+| Add task | Title, description, priority, due date, tags, optional reminder |
+| Complete / reopen | Checkbox on card or detail screen |
+| Delete | Swipe left, quick actions, or detail screen |
+| Task details | Full task view with history and reminder info |
+| Validation | Zod + React Hook Form with inline errors |
+| Clean UI | Shared design tokens (colors, spacing, typography, radius, shadows) |
+| Public API | Sample import from [DummyJSON Todos API](https://dummyjson.com/todos) |
 
 ### Bonus requirements
 
-- **Search** tasks by title, description, or tag.
-- **Filter** tasks by status (All / Pending / Overdue / Completed) with live counts.
-- **Local persistence** with AsyncStorage (tasks survive app restarts).
-- **Navigation** between screens via Expo Router (file-based routing).
+- **Search** — title, description, or tag
+- **Filter** — All / Pending / Overdue / Completed with live counts
+- **Persistence** — Zustand + AsyncStorage (tasks survive restarts)
+- **Navigation** — Expo Router file-based routing
 
-### Extra polish (beyond the brief)
+### Extra polish
 
-- **Real-world task behavior** — automatic **Overdue** status, **green** badge for completed, **red** accent/border for high priority.
-- **Dark mode** — light / dark theme with a one-tap toggle, persisted to the device and respecting the system default.
-- **Internationalization (i18n)** — English and Albanian, with automatic device-language detection.
-- **Drag-to-reorder** — long-press a card to reorder tasks (powered by Reanimated); order is persisted.
-- **Completion progress bar** — a live "X of Y completed" indicator at the top of the list.
-- **Task activity history** — a per-task timeline of create / edit / complete / reopen events.
-- **Local reminders** — schedules a notification on a task's due date (see note below).
-- **Swipe-to-delete** gesture on task cards.
-- **Haptic feedback** on key actions (complete, delete, create, import).
-- **Smooth animations** — card entrance, animated list add/remove (LayoutAnimation).
-- **Pull-to-refresh** on the task list (local refresh only; API import stays on the dedicated button).
-- **Local reminders** — optional notification on the due date at a time you pick (no Firebase; device-only via `expo-notifications`).
-- **Unit tests** for store logic and utilities (Jest).
-- **ESLint + Prettier** for consistent code quality.
+| Area | Details |
+| ---- | ------- |
+| **Toasts** | Create, edit, import, status change, delete — with **5s Undo** on delete |
+| **Quick actions** | Long-press a card → change status, edit, delete (animated sheet) |
+| **Gestures** | Swipe to delete · drag **≡** to reorder · FAB hides on scroll |
+| **Sort & group** | Manual / due date / priority / created; Today / Tomorrow / Later / No date |
+| **More filters** | Sort & grouping collapsed by default behind a toggle |
+| **Settings** | Language (EN/SQ), theme (system/light/dark), notification permissions |
+| **Reminders** | Local on-device notifications on due date + chosen time |
+| **i18n** | English & Albanian, device language detection |
+| **Dark mode** | Persisted preference, theme-aware components (incl. switches) |
+| **Empty states** | Gesture hints when empty; clear search/filters when no matches |
+| **Error boundary** | Friendly fallback if the app crashes |
+| **Tests** | Jest for store, filters, sorting, grouping, toast, status, API mapping |
 
-> **Note on reminders:** **local on-device only** — no Firebase, no push server, no fitness/activity APIs. When testing in **Expo Go**, the system permission dialog applies to the **Expo Go** app (that is normal). Tap Allow for local due-date reminders. The task detail section is labeled **History** (not fitness activity).
+---
+
+## Screens
+
+| Route | Screen |
+| ----- | ------ |
+| `/` | Task list (search, filters, progress, import) |
+| `/task/create` | New task form |
+| `/task/[id]` | Task details + history |
+| `/task/edit/[id]` | Edit task |
+| `/settings` | Language, appearance, notifications |
+
+---
+
+## Gestures & interactions
+
+| Action | How |
+| ------ | --- |
+| Complete / reopen | Tap checkbox on card |
+| Open details | Tap card body |
+| Quick actions | Long-press card |
+| Delete | Swipe left → toast with Undo |
+| Reorder | Drag **≡** handle (Manual sort, grouping off, no search/filter) |
+| Sort / group | Tap **More filters** on the list |
+| Add task | Tap floating **+** button |
+| Settings | Tap **⚙️** in the list header |
 
 ---
 
 ## Tech stack
 
-| Concern            | Choice                                         |
-| ------------------ | ---------------------------------------------- |
-| Framework          | Expo SDK 54, React Native 0.81, React 19       |
-| Language           | TypeScript (strict mode)                       |
-| Navigation         | Expo Router (file-based)                       |
-| Local state        | Zustand + AsyncStorage (persisted)             |
-| Server state       | TanStack Query v5                              |
-| Forms & validation | React Hook Form + Zod                          |
-| i18n               | i18next / react-i18next + expo-localization    |
-| Animations/gestures| Reanimated, gesture-handler, draggable-flatlist |
-| Notifications      | expo-notifications                             |
-| Haptics            | expo-haptics                                   |
-| Dates              | date-fns                                       |
-| Testing            | Jest + jest-expo                               |
-| Tooling            | ESLint (eslint-config-expo) + Prettier         |
+| Concern | Choice |
+| ------- | ------ |
+| Framework | Expo SDK 54, React Native 0.81, React 19 |
+| Language | TypeScript (strict) |
+| Navigation | Expo Router |
+| Local state | Zustand + AsyncStorage |
+| Server state | TanStack Query v5 |
+| Forms | React Hook Form + Zod |
+| i18n | i18next + expo-localization |
+| Gestures | gesture-handler, Reanimated, draggable-flatlist |
+| Notifications | expo-notifications (local only) |
+| Dates | date-fns |
+| Testing | Jest + jest-expo |
+| Tooling | ESLint + Prettier |
 
 ---
 
@@ -72,118 +98,125 @@ A clean, real-world task manager built with **React Native (Expo SDK 54)** and *
 ### Prerequisites
 
 - Node.js 18+ and npm
-- [Expo Go](https://expo.dev/go) on a physical device (recommended for quick testing), or an iOS Simulator / Android Emulator
+- [Expo Go](https://expo.dev/go) on a device, or iOS Simulator / Android Emulator
 
-### Testing on a physical device (Expo Go)
-
-This project targets **Expo SDK 54** so it can be opened on a real phone with **Expo Go** via QR scan.
-
-The app was originally scaffolded on **Expo SDK 56**, but the public **Expo Go** app on iPhone/Android does not yet support SDK 56. For that reason the project was **downgraded to SDK 54** — a deliberate trade-off so reviewers and testers can run the app on a device without a development build.
-
-**Steps:**
-
-1. Install or update **Expo Go** from the App Store / Play Store (it must support **SDK 54**).
-2. Make sure your phone and computer are on the **same Wi‑Fi**.
-3. Run `npm start` and scan the QR code with the Camera app (iOS) or Expo Go (Android).
-
-If you still see *"Project is incompatible with this version of Expo Go"*, update Expo Go to the latest version. If your Expo Go build is older than SDK 54, use a simulator/emulator or a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
-
-### Install
+### Install & run
 
 ```bash
 npm install
+npm start          # Expo dev server — scan QR with Expo Go
+npm run ios        # iOS Simulator
+npm run android    # Android Emulator
+npm run web        # Browser
 ```
-
-### Run
-
-```bash
-npm start          # start the Expo dev server
-npm run ios        # open in iOS Simulator
-npm run android    # open in Android Emulator
-npm run web        # run in the browser
-```
-
-Scan the QR code with Expo Go, or press `i` / `a` in the terminal.
 
 ### Quality checks
 
 ```bash
-npm run typecheck  # TypeScript, no emit
-npm run lint       # ESLint
-npm run format     # Prettier (write)
-npm test           # Jest unit tests
+npm run typecheck
+npm run lint
+npm run format
+npm test
 ```
+
+### Expo Go on a physical device
+
+This project targets **Expo SDK 54** so it opens in **Expo Go** via QR scan without a dev build.
+
+It was scaffolded on SDK 56 first, then downgraded to **SDK 54** because Expo Go on phones often lags behind the newest SDK. All features work the same; only the underlying Expo/RN versions differ.
+
+1. Install/update **Expo Go** (must support SDK 54).
+2. Phone and computer on the **same Wi‑Fi**.
+3. Run `npm start` and scan the QR code.
+
+If you see *"Project is incompatible with this version of Expo Go"*, update Expo Go or use a simulator / [development build](https://docs.expo.dev/develop/development-builds/introduction/).
 
 ---
 
 ## Project structure
 
 ```
-app/                          # Expo Router routes (screens)
-  _layout.tsx                 # Root layout + providers + navigation
-  index.tsx                   # Task list screen
-  task/create.tsx             # Create task
-  task/[id].tsx               # Task details
-  task/edit/[id].tsx          # Edit task
+app/
+  _layout.tsx           # Root layout, providers, stack navigation
+  index.tsx             # Task list
+  settings.tsx          # Settings
+  task/create.tsx       # Create task
+  task/[id].tsx         # Task details
+  task/edit/[id].tsx    # Edit task
 
 src/
-  components/ui/              # Reusable UI primitives (Button, TextField, Badge, ...)
-  features/tasks/
-    api/                      # DummyJSON API client
-    components/               # Task-specific components (TaskCard, TaskFilters, ...)
-    hooks/                    # Query + filter hooks
-    schemas/                  # Zod schemas
-    store/                    # Zustand store (CRUD, search, filter) + tests
-    types/                    # Domain types
-    utils/                    # Status logic, API mapping + tests
-  features/settings/          # Language switcher + settings store
-  i18n/                       # i18next config + en/sq locales
-  lib/                        # Storage, query client, haptics
-  providers/                  # App-wide providers
-  theme/                      # Design tokens
+  components/
+    ErrorBoundary.tsx
+    ui/                 # Button, Toast, EmptyState, AppSwitch, DateTimePickerModal, ...
+  features/
+    tasks/
+      api/              # DummyJSON client
+      components/     # TaskCard, TaskFilters, TaskListSortBar, QuickActions, ...
+      hooks/            # Import, delete-with-undo, refresh, filters
+      schemas/          # Zod schemas
+      store/            # Zustand store + tests
+      types/
+      utils/            # Status, sort, group, API mapping + tests
+    settings/
+      components/       # Language, theme picker, notification row, section cards
+      store/
+  i18n/                 # en + sq locales
+  lib/                  # Notifications, toast, haptics, deep links, query client
+  providers/
+  theme/
 ```
 
 ---
 
 ## Data model
 
-Each task has the following fields:
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `id` | `string` | UUID |
+| `title` | `string` | Required |
+| `description` | `string` | Optional |
+| `status` | `'pending' \| 'completed'` | Stored status |
+| `priority` | `'low' \| 'medium' \| 'high'` | |
+| `dueDate` | `string \| null` | ISO date (`yyyy-MM-dd`) |
+| `reminderEnabled` | `boolean` | Local notification toggle |
+| `reminderTime` | `string \| null` | `HH:mm` when reminder is on |
+| `tags` | `('work' \| 'personal' \| 'study')[]` | Optional |
+| `createdAt` | `string` | ISO timestamp |
+| `history` | `TaskHistoryEntry[]` | Created / edited / completed / reopened |
 
-| Field         | Type                                | Notes                                  |
-| ------------- | ----------------------------------- | -------------------------------------- |
-| `id`          | `string`                            | UUID                                   |
-| `title`       | `string`                            | Required                               |
-| `description` | `string`                            | Optional                               |
-| `status`      | `'pending' \| 'completed'`          | Defaults to `pending`                  |
-| `priority`    | `'low' \| 'medium' \| 'high'`       |                                        |
-| `dueDate`     | `string \| null`                    | ISO date; drives the **Overdue** state |
-| `tags`        | `('work' \| 'personal' \| 'study')[]` | Optional                             |
-| `createdAt`   | `string`                            | ISO timestamp, set automatically       |
-| `history`     | `TaskHistoryEntry[]`                | Activity log (created/edited/etc.)     |
+**Display status** is derived: a pending task with `dueDate` in the past shows as **Overdue** (not stored separately).
 
-The **display status** is derived: a pending task whose `dueDate` is in the past becomes **Overdue**.
+---
+
+## Reminders & notifications
+
+- **Local only** — no Firebase, no push server, no backend.
+- User picks due date + reminder time on the task form.
+- Permission is requested once on first launch (can be changed in **Settings → Notifications**).
+- Tapping a notification opens the related task (deep link via `expo-router`).
+- In **Expo Go**, the OS permission dialog applies to the Expo Go app — that is expected.
 
 ---
 
 ## Public API
 
-Sample tasks are fetched from the DummyJSON Todos API:
-
 ```
 GET https://dummyjson.com/todos?limit=12
 ```
 
-The raw todos are mapped to the app's richer `Task` model (adding priority, due date, tags, and descriptions) in `src/features/tasks/utils/mapApiTodoToTask.ts`, then imported into the local store via TanStack Query.
+Todos are mapped to the app's `Task` model in `src/features/tasks/utils/mapApiTodoToTask.ts` (priority, due date, tags, description), then merged into the local store. Success and errors are shown as **toasts**, not alerts.
 
 ---
 
 ## Testing
 
-Unit tests cover the most important logic:
-
-- `taskStatus` — overdue detection and display-status derivation
-- `mapApiTodoToTask` — API-to-domain mapping
-- `taskStore` — add / toggle / update / delete and filtering/search
+| Module | Coverage |
+| ------ | -------- |
+| `taskStatus` | Overdue detection, display status |
+| `mapApiTodoToTask` | API → domain mapping |
+| `taskStore` | CRUD, restore, `setTaskDisplayStatus`, filters |
+| `taskListUtils` | Sorting, date grouping |
+| `toastStore` | Show, hide, undo action |
 
 ```bash
 npm test
@@ -191,20 +224,22 @@ npm test
 
 ---
 
-## Screenshots / demo
+## Design decisions
 
-> Add screenshots or a short screen recording here.
-
-| Task list | Task details | Create task |
-| --------- | ------------ | ----------- |
-| _add image_ | _add image_ | _add image_ |
+- **Zustand** — simple persisted local state without Redux boilerplate.
+- **TanStack Query** — proper loading/error handling for API import.
+- **Derived overdue** — always correct without background jobs.
+- **Toast over Alert** — less disruptive for success/info; delete from quick actions/detail still confirms first.
+- **Collapsible sort filters** — keeps the list header clean; status filters stay visible.
+- **Drag via ≡ handle** — avoids conflicting with long-press quick actions.
+- **SDK 54** — trade-off for easy Expo Go testing during review and demos.
 
 ---
 
-## Notes & decisions
+## Screenshots
 
-- **Zustand vs Redux** — Zustand keeps local state simple and ergonomic for a small app, with built-in persistence middleware.
-- **TanStack Query** — used for the API import to demonstrate proper server-state handling (loading/error/refetch).
-- **Derived status** — overdue is computed, not stored, so it's always correct without background jobs.
-- **Expo SDK 54 vs 56** — SDK 56 is the latest scaffold, but Expo Go on devices lags behind new SDK releases. SDK 54 was chosen so the app opens with a simple QR scan during demos and PRITECH review. All features (dark mode, drag-to-reorder, i18n, etc.) work the same; only the underlying Expo/RN versions differ.
-- **i18n** — all user-facing strings (including validation messages) are translated; language auto-detects from the device and can be switched in-app.
+> Add screenshots or a short screen recording here.
+
+| Task list | New task | Settings |
+| --------- | -------- | -------- |
+| _add image_ | _add image_ | _add image_ |

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { radius, ThemeColors, useColors, useTheme, useThemedStyles } from '@/theme';
@@ -9,6 +10,7 @@ interface ThemeSwitcherProps {
 }
 
 export function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
+  const { t } = useTranslation();
   const { scheme, toggle } = useTheme();
   const colors = useColors();
   const styles = useThemedStyles((c) => createStyles(c, compact));
@@ -19,7 +21,7 @@ export function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
     <Pressable
       accessibilityRole="switch"
       accessibilityState={{ checked: isDark }}
-      accessibilityLabel="Toggle dark mode"
+      accessibilityLabel={t('settings.theme.toggle')}
       hitSlop={8}
       onPress={() => {
         haptics.light();

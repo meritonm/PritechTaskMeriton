@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toast } from '@/components/ui/Toast';
 import '@/i18n';
 import { queryClient } from '@/lib/queryClient';
@@ -18,7 +19,7 @@ export function AppProviders({ children }: AppProvidersProps) {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SafeAreaProvider>
-            {children}
+            <ErrorBoundary>{children}</ErrorBoundary>
             <Toast />
           </SafeAreaProvider>
         </ThemeProvider>

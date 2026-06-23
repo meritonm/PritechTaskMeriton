@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ImportSampleButton } from '@/features/tasks/components/ImportSampleButton';
-import { LanguageSwitcher } from '@/features/settings/components/LanguageSwitcher';
-import { ThemeSwitcher } from '@/features/settings/components/ThemeSwitcher';
 import { radius, shadows, spacing, ThemeColors, typography, useThemedStyles } from '@/theme';
 
 interface TaskListHeaderProps {
@@ -15,6 +14,7 @@ interface TaskListHeaderProps {
 const NARROW_BREAKPOINT = 380;
 
 export function TaskListHeader({ taskCount, showImport }: TaskListHeaderProps) {
+  const router = useRouter();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
@@ -35,10 +35,15 @@ export function TaskListHeader({ taskCount, showImport }: TaskListHeaderProps) {
             {isNarrow ? t('list.titleShort') : t('list.title')}
           </Text>
         </View>
-        <View style={styles.headerActions}>
-          <ThemeSwitcher compact={isNarrow} />
-          <LanguageSwitcher compact={isNarrow} />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('settings.title')}
+          hitSlop={8}
+          onPress={() => router.push('/settings')}
+          style={({ pressed }) => [styles.settingsButton, pressed && styles.settingsPressed]}
+        >
+          <Ionicons name="settings-outline" size={22} color={styles.settingsIcon.color} />
+        </Pressable>
       </View>
 
       <View style={styles.headerBottom}>
@@ -71,11 +76,20 @@ const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       gap: spacing.sm,
     },
-    headerActions: {
-      flexDirection: 'row',
+    settingsButton: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.pill,
+      backgroundColor: c.surfaceMuted,
       alignItems: 'center',
+      justifyContent: 'center',
       flexShrink: 0,
-      gap: spacing.xs,
+    },
+    settingsPressed: {
+      opacity: 0.7,
+    },
+    settingsIcon: {
+      color: c.text,
     },
     logo: {
       width: 36,

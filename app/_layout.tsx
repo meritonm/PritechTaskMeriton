@@ -60,6 +60,7 @@ function RootStack() {
       <Stack.Screen name="task/create" options={{ title: t('headers.newTask') }} />
       <Stack.Screen name="task/[id]" options={{ title: t('headers.taskDetails') }} />
       <Stack.Screen name="task/edit/[id]" options={{ title: t('headers.editTask') }} />
+      <Stack.Screen name="settings" options={{ title: t('headers.settings') }} />
     </Stack>
   );
 }

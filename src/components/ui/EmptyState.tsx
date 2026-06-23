@@ -7,11 +7,20 @@ import { spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/
 interface EmptyStateProps {
   title: string;
   description: string;
+  hint?: string;
   actionLabel?: string;
+  actionIcon?: keyof typeof Ionicons.glyphMap;
   onAction?: () => void;
 }
 
-export function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  hint,
+  actionLabel,
+  actionIcon = 'add',
+  onAction,
+}: EmptyStateProps) {
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
 
@@ -24,8 +33,9 @@ export function EmptyState({ title, description, actionLabel, onAction }: EmptyS
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
+      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {actionLabel && onAction ? (
-        <Button label={actionLabel} icon="add" onPress={onAction} style={styles.button} />
+        <Button label={actionLabel} icon={actionIcon} onPress={onAction} style={styles.button} />
       ) : null}
     </View>
   );
@@ -68,6 +78,14 @@ const createStyles = (c: ThemeColors) =>
       textAlign: 'center',
       lineHeight: 22,
       maxWidth: 300,
+    },
+    hint: {
+      ...typography.caption,
+      color: c.textSubtle,
+      textAlign: 'center',
+      lineHeight: 18,
+      maxWidth: 320,
+      marginTop: spacing.xs,
     },
     button: {
       marginTop: spacing.md,

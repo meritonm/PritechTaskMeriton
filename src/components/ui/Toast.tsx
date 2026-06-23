@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToastStore } from '@/lib/toastStore';
@@ -16,7 +16,7 @@ export function Toast() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useThemedStyles(createStyles);
-  const { visible, message, type, hide } = useToastStore();
+  const { visible, message, type, action, hide } = useToastStore();
   const translateY = useRef(new Animated.Value(-120)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -52,6 +52,9 @@ export function Toast() {
     ]).start();
   }, [visible, translateY, opacity]);
 
+  const accent =
+    type === 'success' ? colors.success : type === 'error' ? colors.danger : colors.primary;
+
   return (
     <Animated.View
       pointerEvents={visible ? 'auto' : 'none'}
@@ -60,26 +63,31 @@ export function Toast() {
         { top: insets.top + spacing.sm, opacity, transform: [{ translateY }] },
       ]}
     >
-      <Pressable onPress={hide} style={styles.toast} accessibilityRole="alert">
-        <Animated.View
-          style={[
-            styles.iconWrap,
-            {
-              backgroundColor: `${type === 'success' ? colors.success : type === 'error' ? colors.danger : colors.primary}22`,
-            },
-          ]}
-        >
-          <Ionicons
-            name={ICONS[type]}
-            size={22}
-            color={type === 'success' ? colors.success : type === 'error' ? colors.danger : colors.primary}
-          />
-        </Animated.View>
+      <View style={styles.toast}>
+        <View style={[styles.iconWrap, { backgroundColor: `${accent}22` }]}>
+          <Ionicons name={ICONS[type]} size={22} color={accent} />
+        </View>
         <Text style={styles.message} numberOfLines={2}>
           {message}
         </Text>
-        <Ionicons name="close" size={18} color={colors.textMuted} />
-      </Pressable>
+        {action ? (
+          <Pressable
+            onPress={() => {
+              action.onPress();
+              hide();
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            style={styles.actionButton}
+          >
+            <Text style={[styles.actionLabel, { color: accent }]}>{action.label}</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={hide} hitSlop={8} accessibilityRole="button">
+            <Ionicons name="close" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
     </Animated.View>
   );
 }
@@ -117,5 +125,13 @@ const createStyles = (c: ThemeColors) =>
       color: c.text,
       flex: 1,
       fontWeight: '600',
+    },
+    actionButton: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    actionLabel: {
+      ...typography.body,
+      fontWeight: '700',
     },
   });

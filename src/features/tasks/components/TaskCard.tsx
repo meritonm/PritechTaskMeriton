@@ -1,18 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/Badge';
 import { TaskQuickActionsSheet } from '@/features/tasks/components/TaskQuickActionsSheet';
+import { useDeleteTaskWithUndo } from '@/features/tasks/hooks/useDeleteTaskWithUndo';
 import { Task, TaskDisplayStatus } from '@/features/tasks/types/task.types';
 import { getStatusTone, getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { haptics } from '@/lib/haptics';
-import { cancelTaskReminder, rescheduleTaskReminder } from '@/lib/notifications';
+import { rescheduleTaskReminder } from '@/lib/notifications';
 import { useToastStore } from '@/lib/toastStore';
 import { radius, shadows, spacing, ThemeColors, typography, useColors, useThemedStyles } from '@/theme';
 
@@ -30,7 +31,7 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
   const showToast = useToastStore((state) => state.show);
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
   const setTaskDisplayStatus = useTaskStore((state) => state.setTaskDisplayStatus);
-  const deleteTask = useTaskStore((state) => state.deleteTask);
+  const { deleteWithUndo } = useDeleteTaskWithUndo();
   const swipeableRef = useRef<Swipeable>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
 
@@ -67,25 +68,13 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
     showToast(t('toast.statusUpdated', { title: task.title, status: t(`status.${status}`) }));
   };
 
-  const handleDelete = () => {
-    Alert.alert(t('alerts.deleteTitle'), t('alerts.deleteMessage', { title: task.title }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => {
-          haptics.warning();
-          void cancelTaskReminder(task.id);
-          deleteTask(task.id);
-          showToast(t('toast.taskDeleted', { title: task.title }), 'info');
-        },
-      },
-    ]);
+  const handleDelete = (confirm = false) => {
+    deleteWithUndo(task, { confirm });
   };
 
   const confirmDelete = () => {
     swipeableRef.current?.close();
-    handleDelete();
+    handleDelete(false);
   };
 
   const renderRightActions = (
@@ -223,7 +212,7 @@ export function TaskCard({ task, onDrag, dragging = false }: TaskCardProps) {
         }}
         onDelete={() => {
           setActionsOpen(false);
-          handleDelete();
+          handleDelete(true);
         }}
       />
     </>

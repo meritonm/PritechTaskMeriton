@@ -8,6 +8,7 @@ import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
 import { useTaskStore } from '@/features/tasks/store/taskStore';
 import { rescheduleTaskReminder } from '@/lib/notifications';
 import { showReminderErrorAlert } from '@/lib/showReminderScheduleAlert';
+import { useToastStore } from '@/lib/toastStore';
 
 export default function EditTaskScreen() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function EditTaskScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = useTaskStore((state) => state.tasks.find((item) => item.id === id));
   const updateTask = useTaskStore((state) => state.updateTask);
+  const showToast = useToastStore((state) => state.show);
 
   if (!task) {
     return (
@@ -39,6 +41,7 @@ export default function EditTaskScreen() {
       await rescheduleTaskReminder(updated);
     }
 
+    showToast(t('toast.changesSaved'));
     router.back();
   };
 

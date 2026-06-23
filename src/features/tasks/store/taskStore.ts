@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { TaskFormValues } from '@/features/tasks/schemas/task.schema';
+import { TaskSortBy } from '@/features/tasks/utils/taskListUtils';
 import { getTaskDisplayStatus } from '@/features/tasks/utils/taskStatus';
 import {
   Task,
@@ -31,16 +32,21 @@ interface TaskStore {
   tasks: Task[];
   searchQuery: string;
   statusFilter: 'all' | TaskStatus | 'overdue';
+  sortBy: TaskSortBy;
+  groupByDate: boolean;
 
   addTask: (input: TaskFormValues) => Task;
   updateTask: (id: string, input: Partial<TaskFormValues>) => void;
   toggleTaskStatus: (id: string) => void;
   setTaskDisplayStatus: (id: string, status: TaskDisplayStatus) => void;
   deleteTask: (id: string) => void;
+  restoreTask: (task: Task) => void;
   importTasks: (tasks: Task[]) => void;
   setTasks: (tasks: Task[]) => void;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (filter: 'all' | TaskStatus | 'overdue') => void;
+  setSortBy: (sortBy: TaskSortBy) => void;
+  setGroupByDate: (groupByDate: boolean) => void;
 }
 
 export const useTaskStore = create<TaskStore>()(
@@ -49,6 +55,8 @@ export const useTaskStore = create<TaskStore>()(
       tasks: [],
       searchQuery: '',
       statusFilter: 'all',
+      sortBy: 'manual',
+      groupByDate: true,
 
       addTask: (input) => {
         const task: Task = {
@@ -201,6 +209,14 @@ export const useTaskStore = create<TaskStore>()(
           tasks: state.tasks.filter((task) => task.id !== id),
         })),
 
+      restoreTask: (task) =>
+        set((state) => {
+          if (state.tasks.some((item) => item.id === task.id)) {
+            return state;
+          }
+          return { tasks: [task, ...state.tasks] };
+        }),
+
       importTasks: (tasks) =>
         set((state) => ({
           tasks: [...tasks, ...state.tasks],
@@ -210,6 +226,8 @@ export const useTaskStore = create<TaskStore>()(
 
       setSearchQuery: (query) => set({ searchQuery: query }),
       setStatusFilter: (filter) => set({ statusFilter: filter }),
+      setSortBy: (sortBy) => set({ sortBy }),
+      setGroupByDate: (groupByDate) => set({ groupByDate }),
     }),
     {
       name: 'tasks-storage',
