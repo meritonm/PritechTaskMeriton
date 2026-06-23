@@ -128,6 +128,9 @@ export const en = {
   alerts: {
     deleteTitle: 'Delete task',
     deleteMessage: 'Delete "{{title}}"?',
+    unsavedTitle: 'Unsaved changes',
+    unsavedMessage: 'You have unsaved changes. Discard them and leave?',
+    discard: 'Discard',
     importedTitle: 'Imported',
     importedMessage: '{{count}} sample tasks added from DummyJSON API.',
     importFailedTitle: 'Import failed',
@@ -168,8 +171,20 @@ export const en = {
     notifications: {
       title: 'Notifications',
       description: 'Control reminder alerts for due tasks.',
-      rowTitle: 'System permissions',
-      subtitle: 'Open system settings to allow or manage reminders',
+      rowTitle: 'Reminder permissions',
+      requestPermission: 'Allow notifications',
+      openSettings: 'Open system settings',
+      manageInSettings: 'Manage in system settings',
+      status: {
+        granted: 'Allowed',
+        denied: 'Blocked',
+        undetermined: 'Not configured',
+      },
+      hint: {
+        granted: 'You will receive local reminders on the due date and time you set.',
+        denied: 'Notifications are blocked. Enable them in system settings to use reminders.',
+        undetermined: 'Allow notifications so the app can remind you when a task is due.',
+      },
     },
   },
   toast: {

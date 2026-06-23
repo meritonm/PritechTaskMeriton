@@ -1,5 +1,8 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
 
 import { ErrorView } from '@/components/ui/ErrorView';
 import { Screen } from '@/components/ui/Screen';
@@ -12,11 +15,29 @@ import { useToastStore } from '@/lib/toastStore';
 
 export default function EditTaskScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = useTaskStore((state) => state.tasks.find((item) => item.id === id));
   const updateTask = useTaskStore((state) => state.updateTask);
   const showToast = useToastStore((state) => state.show);
+  const [isDirty, setIsDirty] = useState(false);
+  const allowLeaveRef = useRef(false);
+
+  const handleDirtyChange = useCallback((dirty: boolean) => {
+    setIsDirty(dirty);
+  }, []);
+
+  usePreventRemove(isDirty && !allowLeaveRef.current, ({ data }) => {
+    Alert.alert(t('alerts.unsavedTitle'), t('alerts.unsavedMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('alerts.discard'),
+        style: 'destructive',
+        onPress: () => navigation.dispatch(data.action),
+      },
+    ]);
+  });
 
   if (!task) {
     return (
@@ -41,6 +62,7 @@ export default function EditTaskScreen() {
       await rescheduleTaskReminder(updated);
     }
 
+    allowLeaveRef.current = true;
     showToast(t('toast.changesSaved'));
     router.back();
   };
@@ -59,6 +81,7 @@ export default function EditTaskScreen() {
           tags: task.tags,
         }}
         onSubmit={handleSubmit}
+        onDirtyChange={handleDirtyChange}
       />
     </Screen>
   );

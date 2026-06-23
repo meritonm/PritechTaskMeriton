@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -17,14 +18,15 @@ interface TaskFormProps {
   defaultValues?: Partial<TaskFormValues>;
   mode: 'create' | 'edit';
   onSubmit: (values: TaskFormValues) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
+export function TaskForm({ defaultValues, mode, onSubmit, onDirtyChange }: TaskFormProps) {
   const { t } = useTranslation();
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -38,6 +40,10 @@ export function TaskForm({ defaultValues, mode, onSubmit }: TaskFormProps) {
       ...defaultValues,
     },
   });
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const translateError = (message?: string) => (message ? t(message) : undefined);
 

@@ -130,6 +130,9 @@ export const sq: TranslationResources = {
   alerts: {
     deleteTitle: 'Fshij detyrën',
     deleteMessage: 'Të fshihet "{{title}}"?',
+    unsavedTitle: 'Ndryshime të paruajtura',
+    unsavedMessage: 'Ke ndryshime të paruajtura. Të i heqësh dhe të dalësh?',
+    discard: 'Hiq ndryshimet',
     importedTitle: 'U importua',
     importedMessage: '{{count}} detyra shembull u shtuan nga DummyJSON API.',
     importFailedTitle: 'Importimi dështoi',
@@ -170,8 +173,20 @@ export const sq: TranslationResources = {
     notifications: {
       title: 'Njoftimet',
       description: 'Kontrollo alarmet e kujtesave për detyrat.',
-      rowTitle: 'Lejet e sistemit',
-      subtitle: 'Hap cilësimet e sistemit për të lejuar ose menaxhuar kujtesat',
+      rowTitle: 'Lejet e kujtesave',
+      requestPermission: 'Lejo njoftimet',
+      openSettings: 'Hap cilësimet e sistemit',
+      manageInSettings: 'Menaxho në cilësimet e sistemit',
+      status: {
+        granted: 'Lejuar',
+        denied: 'Bllokuar',
+        undetermined: 'Pa konfiguruar',
+      },
+      hint: {
+        granted: 'Do të marrësh kujtesa lokale në ditën dhe orën e afatit që vendos.',
+        denied: 'Njoftimet janë bllokuar. Aktivizoji në cilësimet e sistemit për kujtesa.',
+        undetermined: 'Lejo njoftimet që aplikacioni të të kujtojë kur afrohet afati.',
+      },
     },
   },
   toast: {
